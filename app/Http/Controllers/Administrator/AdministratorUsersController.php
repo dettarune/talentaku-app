@@ -1,0 +1,107 @@
+<?php
+
+namespace App\Http\Controllers\Administrator;
+
+use App\Helpers\Helper;
+use App\Http\Controllers\Controller;
+use App\Models\_user_roles;
+use App\Models\Users;
+use App\Services\ClassroomService;
+use App\Services\UserService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
+
+
+class AdministratorUsersController extends Controller
+{
+    protected $userData;
+    protected $userService;
+    protected $classroomService;
+
+    public function __construct(Request $request, UserService $userService, ClassroomService $classroomService)
+    {
+        $this->userData = $request->{"USER_DATA"};
+        $this->userService = $userService;
+        $this->classroomService = $classroomService;
+    }
+    public function index(){
+        log::info('mak cangkir  ketiban soto '.json_encode($this->userData));
+        $data["ctlUserData"] = $this->userData;
+        $data['ctlNavMenuHeader'] = "User";
+        $data["ctlTitle"] = "User";
+        $data["token"] = $this->userData->{"U_LOGIN_TOKEN"};
+        $groupedRole = _user_roles::all();
+        $data["groupedRole"] = $groupedRole;
+
+
+        return view('backend.user.index', $data);
+    }
+    public function createUser(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'U_NAME' => 'required|unique:_users,U_NAME|max:80',
+            'U_PASSWORD' => 'required|min:6',
+            'UR_ID' => 'required|exists:_user_roles,UR_ID',
+            'U_SEX' => 'required|in:Male,Female,Not Specified',
+        ]);
+        if ($validator->fails()) {
+            return Helper::composeReply('ERROR', $validator->errors()->all(),null,422);
+        }
+        $data = [
+            'U_NAME' => $request->U_NAME,
+            'U_PASSWORD' => Hash::make($request->U_PASSWORD),
+            'UR_ID' => $request->UR_ID,
+            'U_SEX' => $request->U_SEX,
+            'SYS_CREATE_USER' => $this->userData->{"U_ID"},
+        ];
+        $newUser = $this->userService->create($data);
+        return Helper::composeReply('SUCCESS', 'User created successfully', $newUser,201);
+    }
+    public function updateUser(Request $request, $U_ID)
+    {
+        $validator = Validator::make($request->all(), [
+            'U_NAME' => 'sometimes|unique:_users,U_NAME|max:80',
+            'U_PASSWORD' => 'sometimes|min:6',
+            'UR_ID' => 'sometimes|exists:_user_roles,UR_ID',
+            'U_SEX' => 'sometimes|in:Male,Female,Not Specified',
+        ]);
+        if ($validator->fails()) {
+            if ($validator->fails()) {
+                return Helper::composeReply('ERROR', $validator->errors()->all(),null,422);
+            }
+        }
+        $data = [
+            'U_NAME' => $request->U_NAME,
+            'U_PASSWORD' => $request->U_PASSWORD,
+            'UR_ID' => $request->UR_ID,
+            'U_SEX' => $request->U_SEX,
+            'SYS_UPDATE_USER' => $this->userData,
+        ];
+        $updatedUser = $this->userService->update(array_filter($data), $U_ID);
+        if (!$updatedUser) {
+            return Helper::composeReply('ERROR', 'Failed Update User',null,404);
+        }
+        return Helper::composeReply('SUCCESS', 'User updated successfully', $updatedUser);
+    }
+
+    public function datatablesUsers(Request $request)
+    {
+        $groupRole = isset($request->groupRole) ? $request->groupRole : "";
+
+        $jsonData = $this->userService->getDatatables($groupRole);
+        echo $jsonData;
+    }
+
+    public function delete($U_ID)
+    {
+        try {
+           $data = $this->userService->delete($U_ID);
+            return Helper::composeReply('SUCCESS', 'Success delete user',$data,);
+        }catch (\Exception $e) {
+            return Helper::composeReply('ERROR', $e->getMessage(),null,500);
+        }
+    }
+}
