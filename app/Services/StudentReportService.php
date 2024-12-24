@@ -16,16 +16,16 @@ class StudentReportService
     {
         $this->studentReportRepository = $studentReportRepository;
     }
-    public function getAllReport($studentId = null, $teacherId = null, $parentId = null) {
+    public function getAllReport($studentId = null, $teacherId = null, $parentId = null, $date = null) {
         if ($studentId !== null) {
-            $studentReports = $this->studentReportRepository->getAllStudentReportByStudentId($studentId);
+            $studentReports = $this->studentReportRepository->getAllStudentReportByStudentId($studentId, $date);
         } elseif ($teacherId !== null) {
-            $studentReports = $this->studentReportRepository->getAllStudentReportsByTeacherId($teacherId);
+            $studentReports = $this->studentReportRepository->getAllStudentReportsByTeacherId($teacherId, $date);
         } elseif ($parentId !== null) {
-            $studentReports = $this->studentReportRepository->getStudentReportByParentId($parentId);
+            $studentReports = $this->studentReportRepository->getStudentReportByParentId($parentId, $date);
         }
         else {
-            $studentReports = $this->studentReportRepository->getStudentReports();
+            $studentReports = $this->studentReportRepository->getStudentReports($date);
         }
         if(!$studentReports || empty($studentReports)) {
             throw new \Exception("Report not found");

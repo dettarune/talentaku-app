@@ -48,7 +48,7 @@ class ApiStudentController
               $request->validate([
                   'STUDENT_NAME' => 'required|string|max:80',
                   'STUDENT_ROLL_NUMBER' => 'nullable|string|max:80',
-                  'STUDENT_PARENT_U_ID' => 'required|integer|exists:_users,U_ID',
+                  'STUDENT_PARENT_U_ID' => 'required|integer|exists:_users,U_ID|unique:t_students,STUDENT_PARENT_U_ID',
                   'STUDENT_SEX' => 'nullable|in:male,female,Not Specified',
                   'CLSRM_ID' => 'nullable|integer|exists:t_classrooms,CLSRM_ID',
                   'STUDENT_IMAGE_PROFILE' => 'nullable',

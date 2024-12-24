@@ -20,9 +20,9 @@ return new class extends Migration
             $table->text('CLSRM_DESCRIPTION')->nullable()->default('-');
 
             // Timestamps for system fields
-            $table->timestamp('SYS_CREATE_TIME')->default(DB::raw('CURRENT_TIMESTAMP'));
+            $table->timestamp('SYS_CREATE_AT')->default(DB::raw('CURRENT_TIMESTAMP'));
             $table->string('SYS_CREATE_USER')->nullable()->default('-');
-            $table->timestamp('SYS_UPDATE_TIME')->nullable()->default(DB::raw('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'));
+            $table->timestamp('SYS_UPDATE_AT')->nullable()->default(DB::raw('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'));
             $table->string('SYS_UPDATE_USER')->nullable()->default('-');
         });
     }

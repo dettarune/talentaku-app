@@ -19,8 +19,8 @@ class t_student_report_activities extends Model
         'SYS_UPDATED_USER',
     ];
     protected $casts = [
-        'SYS_CREATED_AT' => 'datetime',
-        'SYS_UPDATED_AT' => 'datetime',
+        'SYS_CREATE_AT' => 'datetime',
+        'SYS_UPDATE_AT' => 'datetime',
     ];
 
     /**

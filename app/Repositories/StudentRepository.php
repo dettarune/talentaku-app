@@ -37,7 +37,7 @@ class StudentRepository implements StudentRepositoryInterface
             'STUDENT_SEX' => $data['STUDENT_SEX'] ?? 'Not Specified',
             'CLSRM_ID' => $data['CLSRM_ID'] ?? null,
             'SYS_CREATE_USER' => $data['SYS_CREATE_USER'] ?? 'System',
-            'SYS_CREATE_TIME' => now(),
+            'SYS_CREATE_AT' => now(),
         ];
         try {
             if (!empty($data['STUDENT_IMAGE_PROFILE'])) {
@@ -50,7 +50,7 @@ class StudentRepository implements StudentRepositoryInterface
                     'MEDIA_MIME_TYPE' => $mimeType,
                     'MEDIA_CONTENT_TYPE' => 'Base64',
                     'MEDIA_CONTENT_VALUE' => Helper::removeBase64Header($base64Data),
-                    'SYS_CREATED_AT' => now(),
+                    'SYS_CREATE_AT' => now(),
                     'SYS_CREATED_USER' => $data['SYS_CREATE_USER'] ?? 'System',
                 ]);
             }
@@ -93,7 +93,7 @@ class StudentRepository implements StudentRepositoryInterface
                     DB::table('_medias')->where('MEDIA_ID', $student->STUDENT_IMAGE_PROFILE)->update([
                         'MEDIA_MIME_TYPE' => $mimeType,
                         'MEDIA_CONTENT_VALUE' => $mediaContentValue,
-                        'SYS_UPDATED_AT' => now(),
+                        'SYS_UPDATE_AT' => now(),
                         'SYS_UPDATED_USER' => $attributes['SYS_UPDATE_USER'] ?? 'System',
                     ]);
                 }

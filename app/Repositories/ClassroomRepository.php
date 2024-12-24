@@ -35,7 +35,7 @@ class ClassroomRepository implements ClassroomRepositoryInterface
             'CLSRM_GRADE' => $data['CLSRM_GRADE'],
             'CLSRM_DESCRIPTION' => $data['CLSRM_DESCRIPTION'],
             'SYS_CREATE_USER' => $data['SYS_CREATE_USER'] ?? 'System',
-            'SYS_CREATE_TIME' => now(),
+            'SYS_CREATE_AT' => now(),
         ];
         return t_classrooms::create($insertData);
     }
@@ -46,7 +46,7 @@ class ClassroomRepository implements ClassroomRepositoryInterface
         if ($classroom) {
             $updateData = [
                 'SYS_UPDATE_USER' => $data['SYS_UPDATE_USER'] ?? 'System',
-                'SYS_UPDATE_TIME' => now(),
+                'SYS_UPDATE_AT' => now(),
             ];
             foreach (['CLSRM_NAME', 'CLSRM_TYPE', 'CLSRM_GRADE', 'CLSRM_DESCRIPTION'] as $field) {
                 if (isset($data[$field])) {

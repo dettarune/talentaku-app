@@ -22,8 +22,9 @@ class ApiStudentReportController
         $studentId = $request->query('studentId');
         $teacherId = $request->query('teacherId');
         $parentId = $request->query('parentId');
+        $date = $request->query('date');
         try {
-        return Helper::composeReply('SUCCESS','Success get report',$this->studentReportService->getAllReport($studentId, $teacherId, $parentId));
+        return Helper::composeReply('SUCCESS','Success get report',$this->studentReportService->getAllReport($studentId, $teacherId, $parentId, $date));
         }catch (\Exception $exception){
             return Helper::composeReply('ERROR','ERROR get report',$exception->getMessage(),500);
         }

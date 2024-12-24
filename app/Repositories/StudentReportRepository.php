@@ -11,9 +11,9 @@ use Illuminate\Support\Facades\Log;
 class StudentReportRepository implements StudentReportRepositoryInterface
 {
 
-    public function getStudentReports()
+    public function getStudentReports($date = null)
     {
-        $data = t_student_reports::with([
+        $query = t_student_reports::with([
             'student' => function ($query) {
                 $query->select('S_ID', 'STUDENT_NAME','STUDENT_PARENT_U_ID');
             },
@@ -23,7 +23,16 @@ class StudentReportRepository implements StudentReportRepositoryInterface
             'teacher' => function ($query) {
                 $query->select('U_ID', 'U_NAME as TEACHER_NAME');
             }
-        ])->get();
+        ]);
+        if ($date) {
+            $month = date('m', strtotime($date));
+            $year = date('Y', strtotime($date));
+
+            $query->whereMonth('SR_DATE', $month)
+            ->whereYear('SR_DATE', $year);
+        }
+
+        $data = $query->get();
         $reportArray = json_decode($data->toJson(), true);
         return Helper::arrayChangeKeyCaseRecursive($reportArray);
     }
@@ -46,9 +55,9 @@ class StudentReportRepository implements StudentReportRepositoryInterface
         $reportArray = json_decode($data->toJson(), true);
         return Helper::arrayChangeKeyCaseRecursive($reportArray);
     }
-    public function getStudentReportByParentId($id)
+    public function getStudentReportByParentId($id, $date = null)
     {
-        $data = t_student_reports::with([
+        $query = t_student_reports::with([
             'student' => function ($query) use ($id){
                 $query->where('STUDENT_PARENT_U_ID', $id)->select('S_ID', 'STUDENT_NAME','STUDENT_PARENT_U_ID');
             },
@@ -58,7 +67,19 @@ class StudentReportRepository implements StudentReportRepositoryInterface
             'teacher' => function ($query) {
                 $query->select('U_ID', 'U_NAME as TEACHER_NAME');
             }
-        ])->get();
+        ]);
+        if ($date) {
+            $month = date('m', strtotime($date));
+            $year = date('Y', strtotime($date));
+
+            $query->whereMonth('SR_DATE', $month)
+            ->whereYear('SR_DATE', $year);
+        }
+
+        // Execute the query
+        $data = $query->get();
+
+        // Convert to array and change key case
         $reportArray = json_decode($data->toJson(), true);
         return Helper::arrayChangeKeyCaseRecursive($reportArray);
     }
@@ -99,38 +120,52 @@ class StudentReportRepository implements StudentReportRepositoryInterface
         // TODO: Implement deleteStudentReport() method.
     }
 
-    public function getAllStudentReportByStudentId($id)
+    public function getAllStudentReportByStudentId($id, $date = null)
     {
-        $data = t_student_reports::with([
+        $query = t_student_reports::with([
             'student' => function ($query) {
-                $query->select('S_ID', 'STUDENT_NAME','STUDENT_PARENT_U_ID');
+                $query->select('S_ID', 'STUDENT_NAME', 'STUDENT_PARENT_U_ID');
             },
             'student.parent' => function ($query) {
-                $query->select('U_ID','U_NAME as STUDENT_PARENT_NAME');
+                $query->select('U_ID', 'U_NAME as STUDENT_PARENT_NAME');
             },
             'teacher' => function ($query) {
                 $query->select('U_ID', 'U_NAME as TEACHER_NAME');
             }
-        ])
-            ->where('S_ID', $id)->get();
+        ])->where('S_ID', $id);
+        if ($date) {
+            $month = date('m', strtotime($date));
+            $year = date('Y', strtotime($date));
+
+            $query->whereMonth('SR_DATE', $month)
+            ->whereYear('SR_DATE', $year);
+        }
+        $data = $query->get();
         $reportArray = json_decode($data->toJson(), true);
         return Helper::arrayChangeKeyCaseRecursive($reportArray);
     }
 
-    public function getAllStudentReportsByTeacherId($id)
+    public function getAllStudentReportsByTeacherId($id, $date = null)
     {
-        $data = t_student_reports::with([
+        $query = t_student_reports::with([
             'student' => function ($query) {
-                $query->select('S_ID', 'STUDENT_NAME','STUDENT_PARENT_U_ID');
+                $query->select('S_ID', 'STUDENT_NAME', 'STUDENT_PARENT_U_ID');
             },
             'student.parent' => function ($query) {
-                $query->select('U_ID','U_NAME as STUDENT_PARENT_NAME');
+                $query->select('U_ID', 'U_NAME as STUDENT_PARENT_NAME');
             },
             'teacher' => function ($query) {
                 $query->select('U_ID', 'U_NAME as TEACHER_NAME');
             }
-        ])
-            ->where('U_ID', $id)->get();
+        ])->where('U_ID', $id);
+        if ($date) {
+            $month = date('m', strtotime($date));
+            $year = date('Y', strtotime($date));
+
+            $query->whereMonth('SR_DATE', $month)
+            ->whereYear('SR_DATE', $year);
+        }
+        $data = $query->get();
         $reportArray = json_decode($data->toJson(), true);
         return Helper::arrayChangeKeyCaseRecursive($reportArray);
     }
