@@ -26,6 +26,7 @@ return new class extends Migration
             $table->string('SYS_CREATE_USER')->nullable()->default('-');
             $table->timestamp('SYS_UPDATE_AT')->nullable()->default(DB::raw('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'));
             $table->string('SYS_UPDATE_USER')->nullable()->default('-');
+            $table->softDeletes();
 
             // Foreign key constraints
             $table->foreign('STUDENT_PARENT_U_ID')->references('U_ID')->on('_users')->onDelete('set null');

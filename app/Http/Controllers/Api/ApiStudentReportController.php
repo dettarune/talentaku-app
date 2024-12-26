@@ -45,9 +45,9 @@ class ApiStudentReportController
             'SR_CONTENT' => 'required|string|max:1000',
             'SR_DATE' => 'required|date',
             'ACTIVITIES' => 'nullable|array',
-            'ACTIVITIES.*.ACTIVITY_TYPE' => 'required_with:ACTIVITIES|string',
-            'ACTIVITIES.*.ACTIVITY_NAME' => 'required_with:ACTIVITIES|string',
-            'ACTIVITIES.*.STATUS' => 'required_with:ACTIVITIES|in:MUNCUL,KURANG,BELUM MUNCUL',
+            'ACTIVITIES.*.ACTIVITY_NAME' => 'required_with:ACTIVITIES|string|max:255',
+            'ACTIVITIES.*.REF_ACTIVITIES' => 'nullable|array',
+            'ACTIVITIES.*.REF_ACTIVITIES.*.STATUS' => 'nullable|string|in:MUNCUL,KURANG,BELUM MUNCUL',
         ]);
 
         if ($validator->fails()) {
@@ -64,12 +64,6 @@ class ApiStudentReportController
         ];
 
         try {
-            // Optionally, check for duplicate reports
-//             $existingReport = $this->studentReportService->findSimilarReport($data);
-//             if ($existingReport) {
-//                 return Helper::composeReply('ERROR', 'Duplicate report found', null, 409);
-//             }
-
             $newReport = $this->studentReportService->createReport($data);
             return Helper::composeReply('SUCCESS', 'Student report created successfully', $newReport, 201);
         } catch (\Exception $e) {

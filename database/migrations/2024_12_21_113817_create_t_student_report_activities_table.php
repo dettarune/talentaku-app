@@ -15,9 +15,7 @@ return new class extends Migration
         Schema::create('t_student_report_activities', function (Blueprint $table) {
                 $table->bigIncrements('SRA_ID')->autoIncrement();
                 $table->unsignedBigInteger('SR_ID');
-                $table->string('ACTIVITY_TYPE',80)->default('-');
-                $table->string('ACTIVITY_NAME', 100)->default('-');
-                $table->enum('STATUS', ['MUNCUL', 'KURANG', 'BELUM MUNCUL'])->default('BELUM MUNCUL');
+                $table->string('ACTIVITY_NAME',80)->default('-');
                 $table->timestamp('SYS_CREATE_AT')->default(DB::raw('CURRENT_TIMESTAMP'));
                 $table->string('SYS_CREATE_USER', 100)->default('-');
                 $table->timestamp('SYS_UPDATE_AT')->default(DB::raw('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'));
@@ -27,7 +25,7 @@ return new class extends Migration
                 $table->foreign('SR_ID')->references('SR_ID')->on('t_student_reports')->onDelete('cascade');
 
                 // Index for faster query
-                $table->index(['SR_ID', 'ACTIVITY_TYPE']);
+                $table->index(['SR_ID', 'ACTIVITY_NAME']);
         });
     }
 

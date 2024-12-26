@@ -4,6 +4,7 @@ namespace App\Http\Controllers\General;
 
 use App\Helpers\Helper;
 use App\Http\Controllers\Controller;
+use App\Models\t_students;
 use App\Models\Users;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -19,6 +20,10 @@ class CustomAuthController extends Controller
      */
     public function login(Request $request)
     {
+        $admin =    $request->header("admin");
+        $teacherId =    $request->header("teacher");
+        $parentId =    $request->header("parent");
+
         // Validate input
         $validatedData = $request->validate([
             'U_NAME' => 'required|string|max:80',
@@ -37,6 +42,23 @@ class CustomAuthController extends Controller
                 return Helper::composeReply('ERROR', 'Invalid credentials', null);
             }
 
+           if($admin != null || $teacherId != null || $parentId != null){
+
+            if($admin && $user->role->ROLE_NAME !== 'RM_ADMINISTRATOR'){
+                return Helper::composeReply('ERROR', 'Role mismatch: Unauthorized access', null);
+            }
+            if($teacherId && $user->role->ROLE_NAME !== 'RM_TEACHER'){
+                return Helper::composeReply('ERROR', 'Role mismatch: Unauthorized access', null);
+            }
+            if($parentId && $user->role->ROLE_NAME !== 'RM_GUARDIAN'){
+                return Helper::composeReply('ERROR', 'Role mismatch: Unauthorized access', null);
+            }
+           }
+            $students = [];
+            if ($user->role->ROLE_NAME === 'RM_GUARDIAN') {
+                $students = t_students::where('STUDENT_PARENT_U_ID', $user->U_ID)->first();
+            }
+
             // Generate login token
             $token = $this->generateLoginToken($user->U_ID);
             $user->update(['U_LOGIN_TOKEN' => $token]);
@@ -47,9 +69,11 @@ class CustomAuthController extends Controller
                     'U_ID' => $user->U_ID,
                     'NAME' => $user->U_NAME,
                     'ROLE' => $user->role->ROLE_NAME,
+                    'U_SEX' => $user->U_SEX,
                     'U_LOGIN_TIME' => now(),
                     'U_LOGIN_TOKEN' => $token,
                     'U_LOGIN_EXPIRED_TIME' => $user->U_LOGIN_EXPIRED_TIME,
+                    'STUDENTS' => $students
                 ],
             ];
 

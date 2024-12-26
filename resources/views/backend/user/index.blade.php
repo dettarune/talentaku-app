@@ -82,17 +82,38 @@
                             <input type="text" id="username" name="username" class="form-control" placeholder="Enter user name" required>
                         </div>
                         <div class="mb-3">
-                            <label for="role" class="form-label">User  Role</label>
+                            <label for="role" class="form-label">User Role</label>
                             <select id="role" name="role" class="form-control select2" required>
                                 <option value="" disabled selected>Select Role</option>
                                 @foreach($groupedRole as $role)
-                                <option value="{{ $role->UR_ID }}">{{ $role->ROLE_NAME }}</option>
+                                    <option value="{{ $role->UR_ID }}">{{ $role->ROLE_NAME }}</option>
                                 @endforeach
                             </select>
                         </div>
                         <div class="mb-3">
                             <label for="sex" class="form-label">User Sex</label>
-                            <input type="text" id="sex" name="sex" class="form-control" placeholder="Enter user sex" required>
+                            <select id="sex" name="sex" class="form-control select2" required>
+                                <option value="" disabled selected>Select Gender</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" id="email" name="email" class="form-control" placeholder="Enter email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="phone" class="form-label">Phone</label>
+                            <input type="text" id="phone" name="phone" class="form-control" placeholder="Enter phone number">
+                        </div>
+                        <div class="mb-3">
+                            <label for="address" class="form-label">Address</label>
+                            <textarea id="address" name="address" class="form-control" rows="3" placeholder="Enter address"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="image" class="form-label">Image</label>
+                            <input type="file" id="image" name="image" class="form-control">
+                            <div id="imagePreview" class="mt-2"></div>
                         </div>
                         <div class="mb-3">
                             <label for="password" class="form-label">Password</label>
@@ -113,7 +134,8 @@
             </div>
         </div>
     </div>
-<script type="text/javascript">
+
+    <script type="text/javascript">
         const USER_TOKEN = '{{ $token }}';
         document.addEventListener('DOMContentLoaded', () => {
             $('#dataTable').DataTable({
@@ -205,6 +227,10 @@
                 }
             });
         });
+
+        function editData(rowData){
+            console.log(rowData);
+        }
 
         $(document).on('click', '.delete-action', function() {
             const userId = $(this).data('id');

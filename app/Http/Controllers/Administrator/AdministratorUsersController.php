@@ -46,6 +46,10 @@ class AdministratorUsersController extends Controller
             'U_PASSWORD' => 'required|min:6',
             'UR_ID' => 'required|exists:_user_roles,UR_ID',
             'U_SEX' => 'required|in:Male,Female,Not Specified',
+            'U_EMAIL' => 'required|email',
+            'U_ADDRESS' => 'required|string|max:100',
+            'U_PHONE' => 'required|string|max:20',
+            'U_IMAGE_PROFILE' => 'nullable|string',
         ]);
         if ($validator->fails()) {
             return Helper::composeReply('ERROR', $validator->errors()->all(),null,422);
@@ -55,6 +59,10 @@ class AdministratorUsersController extends Controller
             'U_PASSWORD' => Hash::make($request->U_PASSWORD),
             'UR_ID' => $request->UR_ID,
             'U_SEX' => $request->U_SEX,
+            'U_EMAIL' => $request->U_EMAIL,
+            'U_ADDRESS' => $request->U_ADDRESS,
+            'U_PHONE' => $request->U_PHONE,
+            'U_IMAGE_PROFILE' => $request->U_IMAGE_PROFILE,
             'SYS_CREATE_USER' => $this->userData->{"U_ID"},
         ];
         $newUser = $this->userService->create($data);
@@ -67,6 +75,10 @@ class AdministratorUsersController extends Controller
             'U_PASSWORD' => 'sometimes|min:6',
             'UR_ID' => 'sometimes|exists:_user_roles,UR_ID',
             'U_SEX' => 'sometimes|in:Male,Female,Not Specified',
+            'U_EMAIL' => 'required|email',
+            'U_ADDRESS' => 'required|string|max:100',
+            'U_PHONE' => 'required|string|max:20',
+            'U_IMAGE_PROFILE' => 'nullable|string',
         ]);
         if ($validator->fails()) {
             if ($validator->fails()) {
@@ -78,6 +90,10 @@ class AdministratorUsersController extends Controller
             'U_PASSWORD' => $request->U_PASSWORD,
             'UR_ID' => $request->UR_ID,
             'U_SEX' => $request->U_SEX,
+            'U_EMAIL' => $request->U_EMAIL,
+            'U_ADDRESS' => $request->U_ADDRESS,
+            'U_PHONE' => $request->U_PHONE,
+            'U_IMAGE_PROFILE' => $request->U_IMAGE_PROFILE,
             'SYS_UPDATE_USER' => $this->userData,
         ];
         $updatedUser = $this->userService->update(array_filter($data), $U_ID);

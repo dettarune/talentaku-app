@@ -20,6 +20,10 @@ return new class extends Migration
             $table->string('U_PASSWORD_HASH', 80);
             $table->unsignedSmallInteger('UR_ID')->unsigned(); // _user_roles table
             $table->enum('U_SEX', ['Male', 'Female', 'Not Specified'])->nullable()->default('Not Specified');
+            $table->string('U_EMAIL', 150)->nullable()->default('');
+            $table->string('U_ADDRESS', 100)->nullable()->default('-');
+            $table->string('U_IMAGE_PROFILE', 100)->nullable()->default('');
+            $table->string('U_PHONE', 40)->nullable()->default('');
             $table->string('U_LOGIN_TOKEN', 64)->nullable()->default('-');
             $table->timestamp('U_LOGIN_TIME')->nullable();
             $table->timestamp('U_LOGIN_EXPIRED_TIME')->nullable();
@@ -28,6 +32,7 @@ return new class extends Migration
             $table->string('SYS_CREATE_USER',80)->default('-');
             $table->timestamp('SYS_UPDATE_TIME')->nullable()->default(DB::raw('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'));
             $table->string('SYS_UPDATE_USER',80)->nullable()->default('-');
+            $table->softDeletes();
 
             // Indeks untuk kolom yang sering diakses
             $table->index('U_NAME');

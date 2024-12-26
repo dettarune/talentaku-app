@@ -30,4 +30,9 @@ class t_student_report_activities extends Model
     {
         return $this->belongsTo(t_student_reports::class, 'SR_ID', 'SR_ID');
     }
+
+    public function refActivities()
+    {
+        return $this->hasMany(t_ref_report_activities::class, 'SRA_ID', 'SRA_ID');
+    }
 }

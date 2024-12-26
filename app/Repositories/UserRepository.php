@@ -35,6 +35,10 @@ class UserRepository implements UserRepositoryInterface
             'U_PASSWORD_HASH' => Hash::make($data['U_PASSWORD']),
             'UR_ID' => $data['UR_ID'],
             'U_SEX' => $data['U_SEX'] ?? 'Not Specified',
+            'U_EMAIL' => $data['U_EMAIL'],
+            'U_ADDRESS' => $data['U_ADDRESS'],
+            'U_PHONE' => $data['U_PHONE'],
+            'U_IMAGE_PROFILE' => $data['U_IMAGE_PROFILE'],
             'SYS_CREATE_USER' => $data['SYS_CREATE_USER'] ?? 'System',
             'SYS_CREATE_TIME' => now(),
         ];
@@ -64,6 +68,18 @@ class UserRepository implements UserRepositoryInterface
         }
         if (isset($data['U_SEX'])) {
             $updateData['U_SEX'] = $data['U_SEX'];
+        }
+        if (isset($data['U_EMAIL'])) {
+            $updateData['U_EMAIL'] = $data['U_EMAIL'];
+        }
+        if (isset($data['U_ADDRESS'])) {
+            $updateData['U_ADDRESS'] = $data['U_ADDRESS'];
+        }
+        if (isset($data['U_PHONE'])) {
+            $updateData['U_PHONE'] = $data['U_PHONE'];
+        }
+        if (isset($data['U_IMAGE_PROFILE'])) {
+            $updateData['U_IMAGE_PROFILE'] = $data['U_IMAGE_PROFILE'];
         }
         DB::table('_users')->where('U_ID', $U_ID)->update($updateData);
         return $this->getById($U_ID);
