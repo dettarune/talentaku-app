@@ -7,6 +7,7 @@ use App\Models\Users;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Ramsey\Uuid\Uuid;
 
 class UserRepository implements UserRepositoryInterface
 {
@@ -30,6 +31,7 @@ class UserRepository implements UserRepositoryInterface
 
     public function create(array $data)
     {
+
         $insertData = [
             'U_NAME' => $data['U_NAME'],
             'U_PASSWORD_HASH' => Hash::make($data['U_PASSWORD']),
@@ -38,10 +40,23 @@ class UserRepository implements UserRepositoryInterface
             'U_EMAIL' => $data['U_EMAIL'],
             'U_ADDRESS' => $data['U_ADDRESS'],
             'U_PHONE' => $data['U_PHONE'],
-            'U_IMAGE_PROFILE' => $data['U_IMAGE_PROFILE'],
             'SYS_CREATE_USER' => $data['SYS_CREATE_USER'] ?? 'System',
             'SYS_CREATE_TIME' => now(),
         ];
+        if(!empty($data['U_IMAGE_PROFILE'])){
+                $base64Data = $data['U_IMAGE_PROFILE'];
+                $mimeType = Helper::getMimeTypeFromBase64($base64Data);
+                $mediaId = Uuid::uuid4()->toString();
+                $insertData['U_IMAGE_PROFILE'] = $mediaId;
+                $mediaId = DB::table('_medias')->insertGetId([
+                    'MEDIA_ID' => $mediaId,
+                    'MEDIA_MIME_TYPE' => $mimeType,
+                    'MEDIA_CONTENT_TYPE' => 'Base64',
+                    'MEDIA_CONTENT_VALUE' => Helper::removeBase64Header($base64Data),
+                    'SYS_CREATE_AT' => now(),
+                    'SYS_CREATED_USER' => $data['SYS_CREATE_USER'] ?? 'System',
+                ]);
+        }
         $U_ID = DB::table('_users')->insertGetId($insertData);
         return $this->getById($U_ID);
     }

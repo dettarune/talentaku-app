@@ -125,7 +125,8 @@
                                 "U_NAME" : id,
                                 "U_PASSWORD" : password,
                                 "_token": token,
-                                flagCreateSession: true
+                                flagCreateSession: true,
+                                'admin': true
                             },
                             xhrFields: { withCredentials: true },
                             success : function(data) {

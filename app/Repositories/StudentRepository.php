@@ -13,11 +13,11 @@ use function Laravel\Prompts\select;
 class StudentRepository implements StudentRepositoryInterface
 {
 
-    public function getAll()
-    {
-        $data = DB::table('t_students')->get();
-        return $data ?: null;
-    }
+//    public function getAll()
+//    {
+//        $data = DB::table('t_students')->get();
+//        return $data ?: null;
+//    }
 
     public function getById($S_ID)
     {
@@ -110,13 +110,13 @@ class StudentRepository implements StudentRepositoryInterface
         return t_students::destroy($S_ID);
     }
 
-    public function getByParentUID($parentUid)
-    {
-        $data = DB::table('t_students')
-            ->where('STUDENT_PARENT_U_ID', $parentUid)
-            ->get();
-        return $data ?: null;
-    }
+//    public function getByParentUID($parentUid)
+//    {
+//        $data = DB::table('t_students')
+//            ->where('STUDENT_PARENT_U_ID', $parentUid)
+//            ->get();
+//        return $data ?: null;
+//    }
 
     public function getByClassroomId($CLSRM_ID)
     {
@@ -143,24 +143,91 @@ class StudentRepository implements StudentRepositoryInterface
             ->exists();
     }
 
-    public function getStudentByClassroomType($type)
-    {
-        return t_students::whereHas('classroom', function ($query) use ($type) {
-            $query->where('CLSRM_TYPE', $type);
-        })->get();
-    }
+//    public function getStudentByClassroomType($type)
+//    {
+//        return t_students::whereHas('classroom', function ($query) use ($type) {
+//            $query->where('CLSRM_TYPE', $type);
+//        })->get();
+//    }
 
     public function getStudentByClassroomName($name)
     {
-        return t_students::whereHas('classroom', function ($query) use ($name) {
+        $data = t_students::whereHas('classroom', function ($query) use ($name) {
             $query->where('CLSRM_NAME', $name);
-        })->get();
+        })->select('S_ID', 'STUDENT_NAME', 'STUDENT_ROLL_NUMBER', 'STUDENT_PARENT_U_ID', 'STUDENT_SEX', 'CLSRM_ID', 'STUDENT_IMAGE_PROFILE')->get();
+
+        return $this->formatStudentResponse($data);
+    }
+
+//    public function getStudentByClassroomGrade($grade)
+//    {
+//        return t_students::whereHas('classroom', function ($query) use ($grade) {
+//            $query->where('CLSRM_GRADE', $grade);
+//        })->get();
+//    }
+
+    public function getAll()
+    {
+        $data = DB::table('t_students')
+            ->select('S_ID', 'STUDENT_NAME', 'STUDENT_ROLL_NUMBER', 'STUDENT_PARENT_U_ID', 'STUDENT_SEX', 'CLSRM_ID', 'STUDENT_IMAGE_PROFILE')
+            ->get();
+
+        return $this->formatStudentResponse($data);
+    }
+
+    public function getByParentUID($parentUid)
+    {
+        $data = DB::table('t_students')
+            ->select('S_ID', 'STUDENT_NAME', 'STUDENT_ROLL_NUMBER', 'STUDENT_PARENT_U_ID', 'STUDENT_SEX', 'CLSRM_ID', 'STUDENT_IMAGE_PROFILE')
+            ->where('STUDENT_PARENT_U_ID', $parentUid)
+            ->get();
+
+        return $this->formatStudentResponse($data);
     }
 
     public function getStudentByClassroomGrade($grade)
     {
-        return t_students::whereHas('classroom', function ($query) use ($grade) {
+        $data = t_students::whereHas('classroom', function ($query) use ($grade) {
             $query->where('CLSRM_GRADE', $grade);
-        })->get();
+        })->select('S_ID', 'STUDENT_NAME', 'STUDENT_ROLL_NUMBER', 'STUDENT_PARENT_U_ID', 'STUDENT_SEX', 'CLSRM_ID', 'STUDENT_IMAGE_PROFILE')->get();
+
+        return $this->formatStudentResponse($data);
     }
+
+    public function getStudentByClassroomType($type)
+    {
+        $data = t_students::whereHas('classroom', function ($query) use ($type) {
+            $query->where('CLSRM_TYPE', $type);
+        })->select('S_ID', 'STUDENT_NAME', 'STUDENT_ROLL_NUMBER', 'STUDENT_PARENT_U_ID', 'STUDENT_SEX', 'CLSRM_ID', 'STUDENT_IMAGE_PROFILE')->get();
+
+        return $this->formatStudentResponse($data);
+    }
+
+//    public function getStudentByClassroomName($name)
+//    {
+//        $data = t_students::whereHas('classroom', function ($query) use ($name) {
+//            $query->where('CLSRM_NAME', $name);
+//        })->select('S_ID', 'STUDENT_NAME', 'STUDENT_ROLL_NUMBER', 'STUDENT_PARENT_U_ID', 'STUDENT_SEX', 'CLSRM_ID', 'STUDENT_IMAGE_PROFILE')->get();
+//
+//        return $this->formatStudentResponse($data);
+//    }
+
+    /**
+     * Helper function to format student response
+     */
+    private function formatStudentResponse($data)
+    {
+        return $data->map(function ($student) {
+            return [
+                'S_ID' => $student->S_ID,
+                'STUDENT_NAME' => $student->STUDENT_NAME,
+                'ROLL_NUMBER' => $student->STUDENT_ROLL_NUMBER,
+                'PARENT_U_ID' => $student->STUDENT_PARENT_U_ID,
+                'GENDER' => ucfirst($student->STUDENT_SEX),
+                'CLASSROOM_ID' => $student->CLSRM_ID,
+                'STUDENT_PROFILE_IMAGE' => $student->STUDENT_IMAGE_PROFILE,
+            ];
+        });
+    }
+
 }

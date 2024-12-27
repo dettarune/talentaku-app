@@ -42,7 +42,8 @@ class ApiStudentReportController
         $validator = Validator::make($request->all(), [
             'S_ID' => 'required|exists:t_students,S_ID',
             'U_ID' => 'required|exists:_users,U_ID',
-            'SR_CONTENT' => 'required|string|max:1000',
+            'SR_TITLE' => 'required|string|max:1000',
+            'SR_CONTENT' => 'required|string',
             'SR_DATE' => 'required|date',
             'ACTIVITIES' => 'nullable|array',
             'ACTIVITIES.*.ACTIVITY_NAME' => 'required_with:ACTIVITIES|string|max:255',
@@ -57,6 +58,7 @@ class ApiStudentReportController
         $data = [
             'S_ID' => $request->S_ID,
             'U_ID' => $request->U_ID,
+            'SR_TITLE' => $request->SR_TITLE,
             'SR_CONTENT' => $request->SR_CONTENT,
             'SR_DATE' => $request->SR_DATE,
             'SYS_CREATE_USER' => $this->userData->{"U_ID"},

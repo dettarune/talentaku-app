@@ -16,7 +16,8 @@ return new class extends Migration
             $table->bigIncrements('SR_ID');
             $table->bigInteger('S_ID')->unsigned(); // students
             $table->bigInteger('U_ID')->unsigned()->nullable(); // role teache
-            $table->text('SR_CONTENT');
+            $table->text('SR_TITLE');
+            $table->text('SR_CONTENT')->nullable();
             $table->timestamp('SR_DATE')->default(DB::raw('CURRENT_TIMESTAMP'));
             $table->enum('SR_IS_READ', ['Y', 'N'])->default('N');
 

@@ -14,6 +14,7 @@ class t_student_reports extends Model
     protected $fillable = [
         'S_ID',
         'U_ID',
+        'SR_TITLE',
         'SR_CONTENT',
         'SR_DATE',
         'SR_IS_READ',

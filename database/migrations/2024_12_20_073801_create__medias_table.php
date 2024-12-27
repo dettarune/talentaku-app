@@ -17,9 +17,9 @@ return new class extends Migration
             $table->string('MEDIA_MIME_TYPE', 50);
             $table->enum('MEDIA_CONTENT_TYPE', ['Base64', 'File']);
             $table->longText('MEDIA_CONTENT_VALUE');
-            $table->timestamp('SYS_CREATED_AT')->default(DB::raw('CURRENT_TIMESTAMP'));
+            $table->timestamp('SYS_CREATE_AT')->default(DB::raw('CURRENT_TIMESTAMP'));
             $table->string('SYS_CREATED_USER', 100)->default('-');
-            $table->timestamp('SYS_UPDATED_AT')->default(DB::raw('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'));
+            $table->timestamp('SYS_UPDATE_AT')->default(DB::raw('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'));
             $table->string('SYS_UPDATED_USER', 100)->default('-');
         });
     }

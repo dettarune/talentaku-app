@@ -12,9 +12,7 @@ class t_student_report_activities extends Model
     public $timestamps = false;
     protected $fillable = [
         'SR_ID',
-        'ACTIVITY_TYPE',
         'ACTIVITY_NAME',
-        'STATUS',
         'SYS_CREATED_USER',
         'SYS_UPDATED_USER',
     ];

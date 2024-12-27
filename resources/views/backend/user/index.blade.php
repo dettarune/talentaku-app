@@ -186,6 +186,7 @@
         function createData() {
             $('#modalTitle').text('Add User');
             $('#userForm')[0].reset();
+            $('#imagePreview').html('');
             $('#userModal').modal('show');
         }
 
@@ -193,25 +194,57 @@
             $('#userModal').modal('hide');
         }
 
-        $('#userForm').on('submit', function (e) {
+        function getBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = (error) => reject(error);
+                reader.readAsDataURL(file);
+            });
+        }
+
+        $('#userForm').on('submit', async function (e) {
             e.preventDefault();
+
             // Show loading indicator
             createOverlay("Processing...");
-            const formData = new FormData();
-            formData.append('U_NAME', $('#username').val());
-            formData.append('U_PASSWORD', $('#password').val());
-            formData.append('U_SEX', $('#sex').val());
-            formData.append('UR_ID', $('#role').val());
+
+            // Ambil file gambar dan konversi ke base64
+            const file = $('#image')[0].files[0];
+            let imageBase64 = null;
+
+            if (file) {
+                try {
+                    imageBase64 = await getBase64(file);
+                } catch (error) {
+                    toastr.error("Error processing image");
+                    gOverlay.hide();
+                    return;
+                }
+            }
+
+            // Siapkan data form
+            const formData = {
+                U_NAME: $('#username').val(),
+                U_PASSWORD: $('#password').val(),
+                U_SEX: $('#sex').val(),
+                UR_ID: $('#role').val(),
+                U_EMAIL: $('#email').val(),
+                U_ADDRESS: $('#address').val(),
+                U_PHONE: $('#phone').val(),
+                U_IMAGE_PROFILE: imageBase64,
+            };
+
+            // Kirim data ke server
             $.ajax({
                 url: '{{ url("backend/users/create") }}',
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': '{{ csrf_token() }}',
                 },
-                processData: false,
-                contentType: false,
-                data: formData,
-                success: function(data) {
+                contentType: 'application/json',
+                data: JSON.stringify(formData),
+                success: function (data) {
                     gOverlay.hide();
                     if (data["STATUS"] === "SUCCESS") {
                         toastr.success(data["MESSAGE"]);
@@ -221,10 +254,10 @@
                         toastr.error(data["MESSAGE"]);
                     }
                 },
-                error: function(error) {
+                error: function (error) {
                     gOverlay.hide();
                     toastr.error("Network/server error\r\n" + error);
-                }
+                },
             });
         });
 

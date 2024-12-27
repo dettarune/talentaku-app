@@ -45,13 +45,13 @@ class CustomAuthController extends Controller
            if($admin != null || $teacherId != null || $parentId != null){
 
             if($admin && $user->role->ROLE_NAME !== 'RM_ADMINISTRATOR'){
-                return Helper::composeReply('ERROR', 'Role mismatch: Unauthorized access', null);
+                return Helper::composeReply('ERROR', 'Role mismatch: Unauthorized access ' . $user->role->ROLE_NAME, null);
             }
             if($teacherId && $user->role->ROLE_NAME !== 'RM_TEACHER'){
-                return Helper::composeReply('ERROR', 'Role mismatch: Unauthorized access', null);
+                return Helper::composeReply('ERROR', 'Role mismatch: Unauthorized access ' .  $user->role->ROLE_NAME, null);
             }
             if($parentId && $user->role->ROLE_NAME !== 'RM_GUARDIAN'){
-                return Helper::composeReply('ERROR', 'Role mismatch: Unauthorized access', null);
+                return Helper::composeReply('ERROR', 'Role mismatch: Unauthorized access ' .  $user->role->ROLE_NAME, null);
             }
            }
             $students = [];
@@ -73,7 +73,6 @@ class CustomAuthController extends Controller
                     'U_LOGIN_TIME' => now(),
                     'U_LOGIN_TOKEN' => $token,
                     'U_LOGIN_EXPIRED_TIME' => $user->U_LOGIN_EXPIRED_TIME,
-                    'STUDENTS' => $students
                 ],
             ];
 
@@ -88,7 +87,7 @@ class CustomAuthController extends Controller
             return Helper::composeReply('SUCCESS', 'Login successfully', $response);
         } catch (\Exception $e) {
             Log::error('Login error: ' . $e->getMessage());
-            return Helper::composeReply('ERROR', 'An error occurred during login', null);
+            return Helper::composeReply('ERROR', 'An error occurred during login', $e->getMessage());
         }
     }
 

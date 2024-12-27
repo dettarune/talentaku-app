@@ -16,48 +16,89 @@ class StudentReportRepository implements StudentReportRepositoryInterface
     {
         $query = t_student_reports::with([
             'student' => function ($query) {
-                $query->select('S_ID', 'STUDENT_NAME','STUDENT_PARENT_U_ID')
-                    ->orderBy('S_ID');
+                $query->select('S_ID', 'STUDENT_NAME', 'STUDENT_PARENT_U_ID');
             },
             'student.parent' => function ($query) {
-                $query->select('U_ID','U_NAME as STUDENT_PARENT_NAME');
+                $query->select('U_ID', 'U_NAME as STUDENT_PARENT_NAME');
             },
             'teacher' => function ($query) {
                 $query->select('U_ID', 'U_NAME as TEACHER_NAME');
             },
             'activities' => function ($query) {
-            $query->select('SRA_ID','SR_ID','ACTIVITY_NAME')
-                ->orderBy('SRA_ID');
-             },
+                $query->select('SRA_ID', 'SR_ID', 'ACTIVITY_NAME')
+                    ->orderBy('SRA_ID');
+            },
             'activities.refActivities' => function ($query) {
-                $query->select('RRA_ID','SRA_ID', 'ACTIVITY_TYPE', 'ACTIVITY_NAME',)
+                $query->select('RRA_ID', 'SRA_ID', 'ACTIVITY_TYPE', 'ACTIVITY_NAME', 'STATUS')
                     ->orderBy('RRA_ID');
             },
         ]);
+
         if ($date) {
             $month = date('m', strtotime($date));
             $year = date('Y', strtotime($date));
-
             $query->whereMonth('SR_DATE', $month)
                 ->whereYear('SR_DATE', $year);
         }
+
         if ($parent) {
             $query->whereHas('student', function ($q) use ($parent) {
                 $q->where('STUDENT_PARENT_U_ID', $parent);
             });
         }
+
         if ($teacher) {
             $query->whereHas('teacher', function ($q) use ($teacher) {
                 $q->where('U_ID', $teacher);
             });
         }
+
         $data = $query->orderBy('SR_ID')->get();
-        $reportArray = $data->map(function ($item) {
-            $item->formatted_date = $item->SR_DATE ? \Carbon\Carbon::parse($item->SR_DATE)->format('d-m-Y') : null;
-            return $item;
-        })->toArray();
-        return Helper::arrayChangeKeyCaseRecursive($reportArray);
+
+        // Format data output
+        $formattedData = $data->map(function ($report) {
+            return [
+                'SR_ID' => $report->SR_ID,
+                'S_ID' => $report->S_ID,
+                'U_ID' => $report->U_ID,
+                'SR_TITLE' => $report->SR_TITLE,
+                'SR_CONTENT' => $report->SR_CONTENT,
+                'SR_DATE' => $report->SR_DATE,
+                'FORMATTED_DATE' => $report->SR_DATE ? \Carbon\Carbon::parse($report->SR_DATE)->format('d-F-Y') : null,
+                'STUDENT' => [
+                    'S_ID' => $report->student->S_ID,
+                    'STUDENT_NAME' => $report->student->STUDENT_NAME,
+                    'STUDENT_PARENT_U_ID' => $report->student->STUDENT_PARENT_U_ID,
+                    'PARENT' => [
+                        'U_ID' => $report->student->parent->U_ID,
+                        'STUDENT_PARENT_NAME' => $report->student->parent->STUDENT_PARENT_NAME,
+                    ],
+                ],
+                'TEACHER' => [
+                    'U_ID' => $report->teacher->U_ID,
+                    'TEACHER_NAME' => $report->teacher->TEACHER_NAME,
+                ],
+                'ACTIVITIES' => $report->activities->map(function ($activity) {
+                    return [
+//                        'SRA_ID' => $activity->SRA_ID,
+//                        'SR_ID' => $activity->SR_ID,
+                        'ACTIVITY_NAME' => $activity->ACTIVITY_NAME,
+                        'REF_ACTIVITIES' => $activity->refActivities->map(function ($refActivity) {
+                            return [
+//                                'RRA_ID' => $refActivity->RRA_ID,
+//                                'SRA_ID' => $refActivity->SRA_ID,
+                                'ACTIVITY_TYPE' => $refActivity->ACTIVITY_TYPE == 'Undefined'?null:$refActivity->ACTIVITY_TYPE,
+                                'ACTIVITY_NAME' => $refActivity->ACTIVITY_NAME,
+                                'STATUS' => $refActivity->STATUS,
+                            ];
+                        }),
+                    ];
+                }),
+            ];
+        });
+        return $formattedData;
     }
+
     public function getStudentReports($date = null)
     {
         $query = t_student_reports::with([
@@ -86,22 +127,65 @@ class StudentReportRepository implements StudentReportRepositoryInterface
 
     public function getStudentReportById($id)
     {
-        $data = t_student_reports::with([
+        $report = t_student_reports::with([
             'student' => function ($query) {
-                $query->select('S_ID', 'STUDENT_NAME','STUDENT_PARENT_U_ID');
+                $query->select('S_ID', 'STUDENT_NAME', 'STUDENT_PARENT_U_ID');
             },
             'student.parent' => function ($query) {
-                $query->select('U_ID','U_NAME as STUDENT_PARENT_NAME');
+                $query->select('U_ID', 'U_NAME as STUDENT_PARENT_NAME');
             },
             'teacher' => function ($query) {
                 $query->select('U_ID', 'U_NAME as TEACHER_NAME');
-            }
-            ])
-            ->where("SR_ID", $id)
-            ->first();
-        $reportArray = json_decode($data->toJson(), true);
-        return Helper::arrayChangeKeyCaseRecursive($reportArray);
+            },
+            'activities' => function ($query) {
+                $query->select('SRA_ID', 'SR_ID', 'ACTIVITY_NAME')
+                    ->orderBy('SRA_ID');
+            },
+            'activities.refActivities' => function ($query) {
+                $query->select('RRA_ID', 'SRA_ID', 'ACTIVITY_TYPE', 'ACTIVITY_NAME', 'STATUS')
+                    ->orderBy('RRA_ID');
+            },
+        ])->find($id);
+
+
+        $formattedReport = [
+            'SR_ID' => $report->SR_ID,
+            'S_ID' => $report->S_ID,
+            'U_ID' => $report->U_ID,
+            'SR_TITLE' => $report->SR_TITLE,
+            'SR_CONTENT' => $report->SR_CONTENT,
+            'SR_DATE' => $report->SR_DATE,
+            'FORMATTED_DATE' => $report->SR_DATE ? \Carbon\Carbon::parse($report->SR_DATE)->format('d-m-Y') : null,
+            'STUDENT' => [
+                'S_ID' => $report->student->S_ID,
+                'STUDENT_NAME' => $report->student->STUDENT_NAME,
+                'STUDENT_PARENT_U_ID' => $report->student->STUDENT_PARENT_U_ID,
+                'PARENT' => [
+                    'U_ID' => $report->student->parent->U_ID,
+                    'STUDENT_PARENT_NAME' => $report->student->parent->STUDENT_PARENT_NAME,
+                ],
+            ],
+            'TEACHER' => [
+                'U_ID' => $report->teacher->U_ID,
+                'TEACHER_NAME' => $report->teacher->TEACHER_NAME,
+            ],
+            'ACTIVITIES' => $report->activities->map(function ($activity) {
+                return [
+                    'ACTIVITY_NAME' => $activity->ACTIVITY_NAME,
+                    'REF_ACTIVITIES' => $activity->refActivities->map(function ($refActivity) {
+                        return [
+                            'ACTIVITY_TYPE' => $refActivity->ACTIVITY_TYPE == 'Undefined'?null:$refActivity->ACTIVITY_TYPE,
+                            'ACTIVITY_NAME' => $refActivity->ACTIVITY_NAME,
+                            'STATUS' => $refActivity->STATUS,
+                        ];
+                    }),
+                ];
+            }),
+        ];
+
+        return $formattedReport;
     }
+
     public function getStudentReportByParentId($id, $date = null)
     {
         $query = t_student_reports::with([
@@ -135,6 +219,7 @@ class StudentReportRepository implements StudentReportRepositoryInterface
         $insertData = [
             'S_ID' => $data['S_ID'],
             'U_ID' => $data['U_ID'],
+            'SR_TITLE' => $data['SR_TITLE'],
             'SR_CONTENT' => $data['SR_CONTENT'],
             'SR_DATE' => $data['SR_DATE'],
             'SR_IS_READ' => 'N',
