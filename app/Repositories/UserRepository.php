@@ -31,7 +31,6 @@ class UserRepository implements UserRepositoryInterface
 
     public function create(array $data)
     {
-
         $insertData = [
             'U_NAME' => $data['U_NAME'],
             'U_PASSWORD_HASH' => Hash::make($data['U_PASSWORD']),
@@ -43,19 +42,12 @@ class UserRepository implements UserRepositoryInterface
             'SYS_CREATE_USER' => $data['SYS_CREATE_USER'] ?? 'System',
             'SYS_CREATE_TIME' => now(),
         ];
-        if(!empty($data['U_IMAGE_PROFILE'])){
-                $base64Data = $data['U_IMAGE_PROFILE'];
-                $mimeType = Helper::getMimeTypeFromBase64($base64Data);
-                $mediaId = Uuid::uuid4()->toString();
-                $insertData['U_IMAGE_PROFILE'] = $mediaId;
-                $mediaId = DB::table('_medias')->insertGetId([
-                    'MEDIA_ID' => $mediaId,
-                    'MEDIA_MIME_TYPE' => $mimeType,
-                    'MEDIA_CONTENT_TYPE' => 'Base64',
-                    'MEDIA_CONTENT_VALUE' => Helper::removeBase64Header($base64Data),
-                    'SYS_CREATE_AT' => now(),
-                    'SYS_CREATED_USER' => $data['SYS_CREATE_USER'] ?? 'System',
-                ]);
+
+        if (!empty($data['U_IMAGE_PROFILE'])) {
+            $file = $data['U_IMAGE_PROFILE'];
+            $fileName = uniqid() .$file.'.' . $file->getClientOriginalExtension();
+            $filePath = $file->storeAs('uploads/images', $fileName, 'public');
+            $insertData['U_IMAGE_PROFILE'] = $filePath;
         }
         $U_ID = DB::table('_users')->insertGetId($insertData);
         return $this->getById($U_ID);

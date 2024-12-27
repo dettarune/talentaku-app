@@ -49,7 +49,7 @@ class AdministratorUsersController extends Controller
             'U_EMAIL' => 'required|email',
             'U_ADDRESS' => 'required|string|max:100',
             'U_PHONE' => 'required|string|max:20',
-            'U_IMAGE_PROFILE' => 'nullable|string',
+            'U_IMAGE_PROFILE' => 'nullable|file|image|mimes:jpeg,png,jpg|max:2048',
         ]);
         if ($validator->fails()) {
             return Helper::composeReply('ERROR', $validator->errors()->all(),null,422);
@@ -62,7 +62,7 @@ class AdministratorUsersController extends Controller
             'U_EMAIL' => $request->U_EMAIL,
             'U_ADDRESS' => $request->U_ADDRESS,
             'U_PHONE' => $request->U_PHONE,
-            'U_IMAGE_PROFILE' => $request->U_IMAGE_PROFILE,
+            'U_IMAGE_PROFILE' => $request->file('U_IMAGE_PROFILE'),
             'SYS_CREATE_USER' => $this->userData->{"U_ID"},
         ];
         $newUser = $this->userService->create($data);

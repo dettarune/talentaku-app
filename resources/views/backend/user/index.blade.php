@@ -68,22 +68,22 @@
     </div>
 
     <!-- Modal Create/Edit User -->
-    <div class="modal fade" id="userModal" tabindex="-1" aria-hidden="true">
+    <div class="modal fade" id="userModal"  tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalTitle">Create New User</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form id="userForm">
+                <form id="userForm" enctype="multipart/form-data">
                     <div class="modal-body">
                         <div class="mb-3">
                             <label for="username" class="form-label">User Name</label>
-                            <input type="text" id="username" name="username" class="form-control" placeholder="Enter user name" required>
+                            <input type="text" id="username" name="U_NAME" class="form-control" placeholder="Enter user name" required>
                         </div>
                         <div class="mb-3">
                             <label for="role" class="form-label">User Role</label>
-                            <select id="role" name="role" class="form-control select2" required>
+                            <select id="role" name="UR_ID" class="form-control select2" required>
                                 <option value="" disabled selected>Select Role</option>
                                 @foreach($groupedRole as $role)
                                     <option value="{{ $role->UR_ID }}">{{ $role->ROLE_NAME }}</option>
@@ -92,7 +92,7 @@
                         </div>
                         <div class="mb-3">
                             <label for="sex" class="form-label">User Sex</label>
-                            <select id="sex" name="sex" class="form-control select2" required>
+                            <select id="sex" name="U_SEX" class="form-control select2" required>
                                 <option value="" disabled selected>Select Gender</option>
                                 <option value="Male">Male</option>
                                 <option value="Female">Female</option>
@@ -100,30 +100,29 @@
                         </div>
                         <div class="mb-3">
                             <label for="email" class="form-label">Email</label>
-                            <input type="email" id="email" name="email" class="form-control" placeholder="Enter email" required>
+                            <input type="email" id="email" name="U_EMAIL" class="form-control" placeholder="Enter email" required>
                         </div>
                         <div class="mb-3">
                             <label for="phone" class="form-label">Phone</label>
-                            <input type="text" id="phone" name="phone" class="form-control" placeholder="Enter phone number">
+                            <input type="text" id="phone" name="U_PHONE" class="form-control" placeholder="Enter phone number">
                         </div>
                         <div class="mb-3">
                             <label for="address" class="form-label">Address</label>
-                            <textarea id="address" name="address" class="form-control" rows="3" placeholder="Enter address"></textarea>
+                            <textarea id="address" name="U_ADDRESS" class="form-control" rows="3" placeholder="Enter address"></textarea>
                         </div>
                         <div class="mb-3">
                             <label for="image" class="form-label">Image</label>
-                            <input type="file" id="image" name="image" class="form-control">
-                            <div id="imagePreview" class="mt-2"></div>
+                            <input type="file" id="image" name="U_IMAGE_PROFILE" class="form-control">
+                            <div id="imagePreview"></div>
                         </div>
                         <div class="mb-3">
                             <label for="password" class="form-label">Password</label>
                             <div class="input-group">
-                                <input type="password" id="password" name="password" class="form-control" required>
+                                <input type="password" id="password" name="U_PASSWORD" class="form-control" required>
                                 <button type="button" id="togglePassword" class="btn btn-outline-secondary">
                                     <i id="eyeIcon" class="fas fa-eye"></i>
                                 </button>
                             </div>
-                            <button type="button" id="generatePassword" class="btn btn-link p-0">Generate Password</button>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -131,6 +130,7 @@
                         <button type="submit" class="btn btn-primary">Save</button>
                     </div>
                 </form>
+
             </div>
         </div>
     </div>
@@ -180,6 +180,21 @@
                 var table = $('#dataTable').DataTable();
                 table.ajax.reload();
             });
+            $('#image').on('change', function () {
+                const file = this.files[0];
+                if (file && file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        $('#imagePreview').html(`
+                    <img src="${e.target.result}" alt="Image Preview"
+                         class="img-thumbnail" style="max-width: 100%; height: auto;">
+                `);
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    $('#imagePreview').html('<p class="text-danger">Invalid image file.</p>');
+                }
+            });
         });
 
         //OPEN MODAL
@@ -203,63 +218,36 @@
             });
         }
 
-        $('#userForm').on('submit', async function (e) {
+        $('#userForm').on('submit', function (e) {
             e.preventDefault();
 
-            // Show loading indicator
-            createOverlay("Processing...");
+            const formData = new FormData(this); // Ambil semua data dari form
 
-            // Ambil file gambar dan konversi ke base64
-            const file = $('#image')[0].files[0];
-            let imageBase64 = null;
-
-            if (file) {
-                try {
-                    imageBase64 = await getBase64(file);
-                } catch (error) {
-                    toastr.error("Error processing image");
-                    gOverlay.hide();
-                    return;
-                }
-            }
-
-            // Siapkan data form
-            const formData = {
-                U_NAME: $('#username').val(),
-                U_PASSWORD: $('#password').val(),
-                U_SEX: $('#sex').val(),
-                UR_ID: $('#role').val(),
-                U_EMAIL: $('#email').val(),
-                U_ADDRESS: $('#address').val(),
-                U_PHONE: $('#phone').val(),
-                U_IMAGE_PROFILE: imageBase64,
-            };
-
-            // Kirim data ke server
             $.ajax({
                 url: '{{ url("backend/users/create") }}',
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': '{{ csrf_token() }}',
                 },
-                contentType: 'application/json',
-                data: JSON.stringify(formData),
+                processData: false, // Jangan proses data
+                contentType: false, // Jangan set contentType
+                data: formData,
                 success: function (data) {
-                    gOverlay.hide();
-                    if (data["STATUS"] === "SUCCESS") {
-                        toastr.success(data["MESSAGE"]);
-                        closeModal();
+                    if (data.STATUS === 'SUCCESS') {
+                        toastr.success(data.MESSAGE);
+                        $('#userModal').modal('hide');
                         reloadDataTable();
                     } else {
-                        toastr.error(data["MESSAGE"]);
+                        toastr.error(data.MESSAGE);
                     }
                 },
-                error: function (error) {
-                    gOverlay.hide();
-                    toastr.error("Network/server error\r\n" + error);
+                error: function (xhr) {
+                    const errors = xhr.responseJSON?.errors || ['Unknown error occurred'];
+                    toastr.error(errors.join('<br>'));
                 },
             });
         });
+
 
         function editData(rowData){
             console.log(rowData);

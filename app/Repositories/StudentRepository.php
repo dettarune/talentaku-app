@@ -5,8 +5,10 @@ namespace App\Repositories;
 use App\Helpers\Helper;
 use App\Models\t_students;
 use App\Models\Users;
+
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\URL;
 use Ramsey\Uuid\Uuid;
 use function Laravel\Prompts\select;
 
@@ -41,18 +43,10 @@ class StudentRepository implements StudentRepositoryInterface
         ];
         try {
             if (!empty($data['STUDENT_IMAGE_PROFILE'])) {
-                $base64Data = $data['STUDENT_IMAGE_PROFILE'];
-                $mimeType = Helper::getMimeTypeFromBase64($base64Data);
-                $mediaId = Uuid::uuid4()->toString();
-                $insertData['STUDENT_IMAGE_PROFILE'] = $mediaId;
-                $mediaId = DB::table('_medias')->insertGetId([
-                    'MEDIA_ID' => $mediaId,
-                    'MEDIA_MIME_TYPE' => $mimeType,
-                    'MEDIA_CONTENT_TYPE' => 'Base64',
-                    'MEDIA_CONTENT_VALUE' => Helper::removeBase64Header($base64Data),
-                    'SYS_CREATE_AT' => now(),
-                    'SYS_CREATED_USER' => $data['SYS_CREATE_USER'] ?? 'System',
-                ]);
+                $file = $data['STUDENT_IMAGE_PROFILE'];
+                $fileName = uniqid() . '.' . $file->getClientOriginalExtension();
+                $filePath = $file->storeAs('uploads/images', $fileName, 'public');
+                $insertData['STUDENT_IMAGE_PROFILE'] = $filePath;
             }
         $U_ID = DB::table('t_students')->insertGetId($insertData);
         return $this->getById($U_ID);
@@ -218,6 +212,7 @@ class StudentRepository implements StudentRepositoryInterface
     private function formatStudentResponse($data)
     {
         return $data->map(function ($student) {
+            $baseUrl = URL::to('/');
             return [
                 'S_ID' => $student->S_ID,
                 'STUDENT_NAME' => $student->STUDENT_NAME,
@@ -225,7 +220,7 @@ class StudentRepository implements StudentRepositoryInterface
                 'PARENT_U_ID' => $student->STUDENT_PARENT_U_ID,
                 'GENDER' => ucfirst($student->STUDENT_SEX),
                 'CLASSROOM_ID' => $student->CLSRM_ID,
-                'STUDENT_PROFILE_IMAGE' => $student->STUDENT_IMAGE_PROFILE,
+                'STUDENT_PROFILE_IMAGE' => $baseUrl.'/api/image/'.$student->STUDENT_IMAGE_PROFILE,
             ];
         });
     }

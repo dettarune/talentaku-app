@@ -10,11 +10,12 @@ class ClassroomRepository implements ClassroomRepositoryInterface
 {
     public function getAll()
     {
-        $classrooms = t_classrooms::all();
-        $classrooms->transform(function ($classroom) {
-            $classroom->FINAL_CLSRM_NAME = $this->generateFinalClassroomName($classroom);
-            return $classroom;
-        });
+        $classrooms = t_classrooms::all()->select([
+            'CLSRM_ID',
+            'CLSRM_NAME',
+            'CLSRM_TYPE',
+            'CLSRM_GRADE',
+        ]);
         return $classrooms;
     }
 
