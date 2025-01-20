@@ -18,7 +18,7 @@ class StudentReportService
     }
     public function getAllReport($studentId = null, $teacherId = null, $parentId = null, $date = null) {
 
-           return $studentReports = $this->studentReportRepository->customGetStudentReports($date,$parentId, $teacherId);
+           return $studentReports = $this->studentReportRepository->customGetStudentReports($date,$parentId, $teacherId,$studentId);
     }
      public function getReportById($id){
         $studentReports = $this->studentReportRepository->getStudentReportById($id);
@@ -88,9 +88,14 @@ class StudentReportService
     public function deleteReport($student){
 
     }
+    public function getDatatables($S_ID, $date = null)
+    {
+        return $this->studentReportRepository->getDatatables($S_ID,$date);
+    }
     private function markReportAsRead($reportId)
     {
         $update = ['SR_IS_READ' => 'Y'];
         $this->studentReportRepository->updateStudentReport($update, $reportId);
     }
+
 }

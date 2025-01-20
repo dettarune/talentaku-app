@@ -4,7 +4,7 @@ namespace App\Repositories;
 
 interface StudentReportRepositoryInterface
 {
-    public function customGetStudentReports($date = null, $parent = null, $teacher = null);
+    public function customGetStudentReports($date = null, $parent = null, $teacher = null, $studentId = null);
 
     public function getStudentReports($date = null);
     public function getStudentReportById($id);
@@ -31,5 +31,7 @@ interface StudentReportRepositoryInterface
     public function createRefReportActivity(array $data);
     public function updateRefReportActivity($id, array $data);
     public function deleteRefReportActivity();
+
+    public function getDatatables($S_ID, $date = null);
 
 }

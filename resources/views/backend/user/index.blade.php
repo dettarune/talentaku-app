@@ -35,7 +35,7 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h5 class="card-title">Manage Users</h5>
-                    <button type="button" class="btn btn-primary" onclick="createData()">
+                    <button type="button" class="btn btn-primary" onclick="showCreateModal()">
                         <i class="fas fa-plus"></i> Add User
                     </button>
                 </div>
@@ -55,6 +55,10 @@
                         <thead class="table-light">
                         <tr>
                             <th>User Name</th>
+                            <th>User Email</th>
+                            <th>User Address</th>
+                            <th>User Phone</th>
+                            <th>Last Login</th>
                             <th>User Role</th>
                             <th>User Sex</th>
                             <th>Action</th>
@@ -67,22 +71,22 @@
         </div>
     </div>
 
-    <!-- Modal Create/Edit User -->
-    <div class="modal fade" id="userModal"  tabindex="-1" aria-hidden="true">
+    <!-- Modal Create User -->
+    <div class="modal fade" id="createUserModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalTitle">Create New User</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form id="userForm" enctype="multipart/form-data">
+                <form id="createUserForm" enctype="multipart/form-data">
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label for="username" class="form-label">User Name</label>
+                            <label for="username" class="form-label">User  Name</label>
                             <input type="text" id="username" name="U_NAME" class="form-control" placeholder="Enter user name" required>
                         </div>
                         <div class="mb-3">
-                            <label for="role" class="form-label">User Role</label>
+                            <label for="role" class="form-label">User  Role</label>
                             <select id="role" name="UR_ID" class="form-control select2" required>
                                 <option value="" disabled selected>Select Role</option>
                                 @foreach($groupedRole as $role)
@@ -91,7 +95,7 @@
                             </select>
                         </div>
                         <div class="mb-3">
-                            <label for="sex" class="form-label">User Sex</label>
+                            <label for="sex" class="form-label">User  Sex</label>
                             <select id="sex" name="U_SEX" class="form-control select2" required>
                                 <option value="" disabled selected>Select Gender</option>
                                 <option value="Male">Male</option>
@@ -100,7 +104,7 @@
                         </div>
                         <div class="mb-3">
                             <label for="email" class="form-label">Email</label>
-                            <input type="email" id="email" name="U_EMAIL" class="form-control" placeholder="Enter email" required>
+                            <input type="email" id="email" name="U_EMAIL" class="form-control" placeholder="Enter email">
                         </div>
                         <div class="mb-3">
                             <label for="phone" class="form-label">Phone</label>
@@ -112,7 +116,7 @@
                         </div>
                         <div class="mb-3">
                             <label for="image" class="form-label">Image</label>
-                            <input type="file" id="image" name="U_IMAGE_PROFILE" class="form-control">
+                            <input type="file" id="image" name="U_IMAGE_PROFILE" class="form-control" onchange="previewImage(this)">
                             <div id="imagePreview"></div>
                         </div>
                         <div class="mb-3">
@@ -130,13 +134,96 @@
                         <button type="submit" class="btn btn-primary">Save</button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
 
+    <!-- Modal Edit User -->
+    <div class="modal fade" id="editUserModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">Edit User</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="editUserForm" enctype="multipart/form-data">
+                    <div class="modal-body">
+                        <input type="hidden" id="EDIT_U_ID" name="U_ID"> <!-- Hidden field for editing -->
+
+                        <div class="mb-3">
+                            <label for="EDIT_USERNAME" class="form-label">User  Name</label>
+                            <input type="text" id="EDIT_USERNAME" name="U_NAME" class="form-control" placeholder="Enter user name">
+                        </div>
+                        <div class="mb-3">
+                            <label for="EDIT_ROLE" class="form-label">User  Role</label>
+                            <select id="EDIT_ROLE" name="UR_ID" class="form-control select2">
+                                <option value="" disabled selected>Select Role</option>
+                                @foreach($groupedRole as $role)
+                                    <option value="{{ $role->UR_ID }}">{{ $role->ROLE_NAME }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="EDIT_SEX" class="form-label">User  Sex</label>
+                            <select id="EDIT_SEX" name="U_SEX" class="form-control select2">
+                                <option value="" disabled selected>Select Gender</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="EDIT_EMAIL" class="form-label">Email</label>
+                            <input type="email" id="EDIT_EMAIL" name="U_EMAIL" class="form-control" placeholder="Enter email">
+                        </div>
+                        <div class="mb-3">
+                            <label for="EDIT_PHONE" class="form-label">Phone</label>
+                            <input type="text" id="EDIT_PHONE" name="U_PHONE" class="form-control" placeholder="Enter phone number">
+                        </div>
+                        <div class="mb-3">
+                            <label for="EDIT_ADDRESS" class="form-label">Address</label>
+                            <textarea id="EDIT_ADDRESS" name="U_ADDRESS" class="form-control" rows="3" placeholder="Enter address"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="U_IMAGE_PROFILE" class="form-label">Image</label>
+                            <input type="file" id="U_IMAGE_PROFILE" name="U_IMAGE_PROFILE" class="form-control" onchange="previewImage(this)">
+                            <div id="EDIT_IMAGE_PREVIEW"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="EDIT_PASSWORD" class="form-label">Password</label>
+                            <div class="input-group">
+                                <input type="password" id="EDIT_PASSWORD" name="U_PASSWORD" class="form-control">
+                                <button type="button" id="toggleEditPassword" class="btn btn-outline-secondary">
+                                    <i id="editEyeIcon" class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
 
     <script type="text/javascript">
         const USER_TOKEN = '{{ $token }}';
+
+        function previewImage(input) {
+            const file = input.files[0];
+            const previewContainer = input.id === 'image' ? '#imagePreview' : '#EDIT_IMAGE_PREVIEW'; // Determine which preview to use
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    $(previewContainer).html('<img src="' + e.target.result + '" alt="Image Preview" class="img-thumbnail" width="100">');
+                }
+                reader.readAsDataURL(file);
+            } else {
+                $(previewContainer).html(''); // Clear the preview if no file is selected
+            }
+        }
         document.addEventListener('DOMContentLoaded', () => {
             $('#dataTable').DataTable({
                 processing: true,
@@ -157,9 +244,13 @@
                 },
                 columns: [
                     { data: "User Name" },
+                    { data: "User Email" },
+                    { data: "User Address" },
+                    { data: "User Phone" },
+                    { data: "Last Login" },
                     { data: "User Role" },
                     { data: "User Sex" },
-                    { data: "Action" }
+                    { data: "Action" },
                 ],
                 dom: '<"datatable-header"lf>t<"datatable-footer"ip>',
                 responsive: true,
@@ -197,61 +288,122 @@
             });
         });
 
-        //OPEN MODAL
-        function createData() {
-            $('#modalTitle').text('Add User');
-            $('#userForm')[0].reset();
-            $('#imagePreview').html('');
-            $('#userModal').modal('show');
+        function showCreateModal() {
+            $('#modalTitle').text('Create New User');
+            $('#createUserForm')[0].reset(); // Reset the create form
+            $('#createUserModal').modal('show');
         }
 
-        function closeModal() {
-            $('#userModal').modal('hide');
+        function editData(rowData) {
+            $('#modalTitle').text('Edit User');
+            $('#EDIT_U_ID').val(rowData.U_ID).data('original-value', rowData.U_ID);
+            $('#EDIT_USERNAME').val(rowData.U_NAME).data('original-value', rowData.U_NAME);
+            $('#EDIT_ROLE').val(rowData.UR_ID).data('original-value', rowData.UR_ID);
+            $('#EDIT_SEX').val(rowData.U_SEX).data('original-value', rowData.U_SEX);
+            $('#EDIT_EMAIL').val(rowData.U_EMAIL).data('original-value', rowData.U_EMAIL);
+            $('#EDIT_PHONE').val(rowData.U_PHONE).data('original-value', rowData.U_PHONE);
+            $('#EDIT_ADDRESS').val(rowData.U_ADDRESS).data('original-value', rowData.U_ADDRESS);
+            $('#EDIT_PASSWORD').val('').data('original-value', '');
+
+
+            if (rowData.U_IMAGE_PROFILE) {
+                $('#EDIT_IMAGE_PREVIEW').html('<img src="' + '{{ URL::asset('storage/') }}' + '/' + rowData.U_IMAGE_PROFILE + '" alt="User  Image" class="img-thumbnail" width="100">');
+            } else {
+                $('#EDIT_IMAGE_PREVIEW').html('');
+            }
+
+            $('#editUserModal').modal('show');
         }
 
-        function getBase64(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = () => resolve(reader.result);
-                reader.onerror = (error) => reject(error);
-                reader.readAsDataURL(file);
-            });
-        }
+        $('#createUserForm').on('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const url = '/backend/users/create'; // Adjust this URL to your actual endpoint
+            createOrUpdateData(formData, url, 'createUserModal');
+        });
 
-        $('#userForm').on('submit', function (e) {
+        $('#editUserForm').on('submit', function (e) {
             e.preventDefault();
 
-            const formData = new FormData(this); // Ambil semua data dari form
+            const formData = new FormData();
+            const originalData = {
+                U_NAME: $('#EDIT_USERNAME').data('original-value'),
+                UR_ID: $('#EDIT_ROLE').data('original-value'),
+                U_SEX: $('#EDIT_SEX').data('original-value'),
+                U_EMAIL: $('#EDIT_EMAIL').data('original-value'),
+                U_PHONE: $('#EDIT_PHONE').data('original-value'),
+                U_ADDRESS: $('#EDIT_ADDRESS').data('original-value'),
+                U_PASSWORD: $('#EDIT_PASSWORD').data('original-value'),
+                U_IMAGE_PROFILE: $('#EDIT_IMAGE_PREVIEW img').length ? $('#EDIT_IMAGE_PREVIEW img').attr('src') : null, // Original image URL
+            };
 
+            const newData = {
+                U_NAME: $('#EDIT_USERNAME').val(),
+                UR_ID: $('#EDIT_ROLE').val(),
+                U_SEX: $('#EDIT_SEX').val(),
+                U_EMAIL: $('#EDIT_EMAIL').val(),
+                U_PHONE: $('#EDIT_PHONE').val(),
+                U_ADDRESS: $('#EDIT_ADDRESS').val(),
+                U_PASSWORD: $('#EDIT_PASSWORD').val(),
+                U_IMAGE_PROFILE: $('#U_IMAGE_PROFILE').val() ? $('#U_IMAGE_PROFILE')[0].files[0] : null, // New image file
+            };
+
+            // Check if data has changed
+            let hasChanged = false;
+
+            Object.keys(newData).forEach((key) => {
+                if (key === 'U_IMAGE_PROFILE') {
+                    // Check if the image file name is different
+                    if (newData[key] && (!originalData[key] || newData[key].name !== originalData[key].split('/').pop())) {
+                        hasChanged = true;
+                        formData.append(key, newData[key]); // Append only the new image
+                    }
+                } else if (newData[key] !== originalData[key]) {
+                    hasChanged = true;
+                    formData.append(key, newData[key]); // Append changed fields
+                }
+            });
+
+            if (!hasChanged) {
+                toastr.warning('No changes to save.');
+                return; // Prevent form submission
+            }
+
+            const id = $('#EDIT_U_ID').val();
+            const url = '/backend/users/' + id + '/update'; // Adjust this URL to your actual endpoint
+
+            createOrUpdateData(formData, url, 'editUserModal');
+        });
+
+        function createOrUpdateData(formData, url, modalId) {
+            createOverlay('Processing...'); // Show overlay while processing
             $.ajax({
-                url: '{{ url("backend/users/create") }}',
+                url: url,
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': '{{ csrf_token() }}',
                 },
-                processData: false, // Jangan proses data
-                contentType: false, // Jangan set contentType
+                processData: false,
+                contentType: false,
                 data: formData,
                 success: function (data) {
                     if (data.STATUS === 'SUCCESS') {
                         toastr.success(data.MESSAGE);
-                        $('#userModal').modal('hide');
-                        reloadDataTable();
+                        gOverlay.hide();
+                        $('#' + modalId).modal('hide');
+                        $('#dataTable').DataTable().ajax.reload();
                     } else {
                         toastr.error(data.MESSAGE);
+                        gOverlay.hide();
                     }
                 },
-                error: function (xhr) {
-                    const errors = xhr.responseJSON?.errors || ['Unknown error occurred'];
-                    toastr.error(errors.join('<br>'));
+                error: function (error) {
+                    gOverlay.hide();
+                    toastr.error('Network or server error: ' + error);
                 },
             });
-        });
-
-
-        function editData(rowData){
-            console.log(rowData);
         }
+
 
         $(document).on('click', '.delete-action', function() {
             const userId = $(this).data('id');
@@ -382,5 +534,6 @@
             gOverlay.hide();
             table.ajax.reload();
         }
+
 </script>
 @endsection

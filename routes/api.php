@@ -17,6 +17,8 @@ Route::get('/', function(Request $request) {
 
 
 
+
+
 require __DIR__ . '/api/api.auth.php';
 require __DIR__ . '/api/api.user.php';
 require __DIR__ . '/api/api.image.php';

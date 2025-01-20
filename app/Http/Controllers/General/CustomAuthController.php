@@ -38,20 +38,20 @@ class CustomAuthController extends Controller
             log::info($user);
 
             // Check if user exists and password is correct
-            if (!$user || Hash::check($user->U_ID.$validatedData['U_PASSWORD'], $user->U_PASSWORD_HASH)) {
-                return Helper::composeReply('ERROR', 'Invalid credentials', null);
+            if (!$user || !Hash::check($user->U_ID.$validatedData['U_PASSWORD'], $user->U_PASSWORD_HASH)) {
+                return Helper::composeReply('ERROR', 'Invalid credentials', null ,401);
             }
 
            if($admin != null || $teacherId != null || $parentId != null){
 
             if($admin && $user->role->ROLE_NAME !== 'RM_ADMINISTRATOR'){
-                return Helper::composeReply('ERROR', 'Role mismatch: Unauthorized access ' . $user->role->ROLE_NAME, null);
+                return Helper::composeReply('ERROR', 'Role mismatch: Unauthorized access ' . $user->role->ROLE_NAME, null,403);
             }
             if($teacherId && $user->role->ROLE_NAME !== 'RM_TEACHER'){
-                return Helper::composeReply('ERROR', 'Role mismatch: Unauthorized access ' .  $user->role->ROLE_NAME, null);
+                return Helper::composeReply('ERROR', 'Role mismatch: Unauthorized access ' .  $user->role->ROLE_NAME, null,403);
             }
             if($parentId && $user->role->ROLE_NAME !== 'RM_GUARDIAN'){
-                return Helper::composeReply('ERROR', 'Role mismatch: Unauthorized access ' .  $user->role->ROLE_NAME, null);
+                return Helper::composeReply('ERROR', 'Role mismatch: Unauthorized access ' .  $user->role->ROLE_NAME, null,403);
             }
            }
             $students = [];

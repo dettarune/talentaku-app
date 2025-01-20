@@ -20,14 +20,15 @@ class ApiImageController
     }
     public function getUserProfileImage($url)
     {
-        $filePath = urldecode($url);
-        if (!Storage::exists($filePath)) {
+        $filePath = $url;
+        if (!Storage::disk('public')->exists($filePath)) {
             return response()->json(['message' => 'File not found'], 404);
         }
-        $fileContent = Storage::get($filePath);
-        $mimeType = Storage::mimeType($filePath);
+        $fileContent = Storage::disk('public')->get($filePath);
+        $mimeType = Storage::disk('public')->mimeType($filePath);
         return response($fileContent, 200)->header('Content-Type', $mimeType);
     }
+
     public function getStudentProfileImage($url)
     {
         $filePath = urldecode($url);

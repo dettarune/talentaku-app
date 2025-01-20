@@ -19,4 +19,7 @@ interface StudentRepositoryInterface
     public function getStudentByClassroomType($type);
     public function getStudentByClassroomName($name);
     public function getStudentByClassroomGrade($grade);
+
+    public function getDatatables();
+
 }

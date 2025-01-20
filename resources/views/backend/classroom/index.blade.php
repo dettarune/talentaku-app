@@ -58,7 +58,9 @@
         </div>
     </div>
 
+
     <!-- Modal Create/Edit Classroom -->
+    <!-- Modal Create Classroom -->
     <div class="modal fade" id="classroomModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -68,22 +70,87 @@
                 </div>
                 <form id="classroomForm">
                     <div class="modal-body">
-                        <input type="hidden" id="EDIT_CLSRM_ID" name="CLSRM_ID">
+                        <input type="hidden" id="CLSRM_ID" name="CLSRM_ID"> <!-- Hidden field for editing -->
+
+                        <!-- Classroom Name -->
                         <div class="mb-3">
                             <label for="CLSRM_NAME" class="form-label">Classroom Name</label>
                             <input type="text" id="CLSRM_NAME" name="CLSRM_NAME" class="form-control" placeholder="Enter classroom name" required>
                         </div>
+
+                        <!-- Classroom Type -->
+{{--                        <div class="mb-3">--}}
+{{--                            <label for="CLSRM_TYPE" class="form-label">Classroom Type</label>--}}
+{{--                            <input type="text" id="CLSRM_TYPE" name="CLSRM_TYPE" class="form-control" placeholder="Enter classroom type" required>--}}
+{{--                        </div>--}}
                         <div class="mb-3">
                             <label for="CLSRM_TYPE" class="form-label">Classroom Type</label>
-                            <input type="text" id="CLSRM_TYPE" name="CLSRM_TYPE" class="form-control" placeholder="Enter classroom type" required>
+                            <select id="CLSRM_TYPE" name="CLSRM_TYPE" class="form-control" required>
+                                <option value="" disabled selected>Select classroom type</option>
+                                <option value="KB">KB</option>
+                                <option value="SD">SD</option>
+                            </select>
                         </div>
+
+                        <!-- Classroom Grade -->
                         <div class="mb-3">
                             <label for="CLSRM_GRADE" class="form-label">Classroom Grade</label>
                             <input type="text" id="CLSRM_GRADE" name="CLSRM_GRADE" class="form-control" placeholder="Enter classroom grade" required>
                         </div>
+
+                        <!-- Description -->
                         <div class="mb-3">
                             <label for="CLSRM_DESCRIPTION" class="form-label">Description</label>
-                            <textarea id="CLSRM_DESCRIPTION" name="CLSRM_DESCRIPTION" class="form-control" placeholder="Enter classroom description" required></textarea>
+                            <textarea id="CLSRM_DESCRIPTION" name="CLSRM_DESCRIPTION" class="form-control" placeholder="Enter classroom description"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Edit Classroom -->
+    <div class="modal fade" id="editClassroomModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">Edit Classroom</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="editClassroomForm">
+                    <div class="modal-body">
+                        <input type="hidden" id="EDIT_CLSRM_ID" name="CLSRM_ID"> <!-- Hidden field for editing -->
+
+                        <!-- Classroom Name -->
+                        <div class="mb-3">
+                            <label for="EDIT_CLSRM_NAME" class="form-label">Classroom Name</label>
+                            <input type="text" id="EDIT_CLSRM_NAME" name="CLSRM_NAME" class="form-control" placeholder="Enter classroom name" required>
+                        </div>
+
+                        <!-- Classroom Type -->
+                        <div class="mb-3">
+                            <label for="EDIT_CLSRM_TYPE" class="form-label">Classroom Type</label>
+                            <select id="EDIT_CLSRM_TYPE" name="CLSRM_TYPE" class="form-control" required>
+                                <option value="" disabled selected>Select classroom type</option>
+                                <option value="KB">KB</option>
+                                <option value="SD">SD</option>
+                            </select>
+                        </div>
+
+                        <!-- Classroom Grade -->
+                        <div class="mb-3">
+                            <label for="EDIT_CLSRM_GRADE" class="form-label">Classroom Grade</label>
+                            <input type="text" id="EDIT_CLSRM_GRADE" name="CLSRM_GRADE" class="form-control" placeholder="Enter classroom grade" required>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="mb-3">
+                            <label for="EDIT_CLSRM_DESCRIPTION" class="form-label">Description</label>
+                            <textarea id="EDIT_CLSRM_DESCRIPTION" name="CLSRM_DESCRIPTION" class="form-control" placeholder="Enter classroom description"></textarea>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -96,6 +163,8 @@
     </div>
 
     <script type="text/javascript">
+        var token = '{{$token}}';
+        document.getElementById('CLSRM_DESCRIPTION').value = '-';
         document.addEventListener('DOMContentLoaded', () => {
             $('#dataTable').DataTable({
                 processing: true,
@@ -138,42 +207,88 @@
         function showCreateModal() {
             $('#classroomModal').modal('show');
             $('#modalTitle').text('Create New Classroom');
-            $('#classroomForm')[0].reset();
-            $('#EDIT_CLSRM_ID').val('');
+            $('#classroomForm')[0].reset(); // Reset the form
+            $('#CLSRM_ID').val(''); // Clear the hidden ID field
+            document.getElementById("CLSRM_DESCRIPTION").defaultValue = "-";
         }
 
         $('#classroomForm').on('submit', function(e) {
             e.preventDefault();
-            // Add your AJAX call here to save the classroom data
+            const formData = new FormData(this);
+            const url = '/api/classroom/create'; // Adjust this URL to your actual endpoint
+            createOrUpdateData(formData, url, 'classroomModal');
         });
 
+        function editData(rowData) {
+            $('#modalTitle').text('Edit Classroom');
+            $('#EDIT_CLSRM_ID').val(rowData.CLSRM_ID).data('original-value', rowData.CLSRM_ID);
+            $('#EDIT_CLSRM_NAME').val(rowData.CLASSROOM_NAME).data('original-value', rowData.CLASSROOM_NAME);
+            $('#EDIT_CLSRM_TYPE').val(rowData.CLSRM_TYPE).data('original-value', rowData.CLSRM_TYPE);
+            $('#EDIT_CLSRM_GRADE').val(rowData.CLSRM_GRADE).data('original-value', rowData.CLSRM_GRADE);
+            $('#EDIT_CLSRM_DESCRIPTION').val(rowData.CLSRM_DESCRIPTION).data('original-value', rowData.CLSRM_DESCRIPTION);
+
+            $('#editClassroomModal').modal('show');
+        }
+
+        $('#editClassroomForm').on('submit', function(e) {
+            e.preventDefault();
+            let hasChanges = false;
+            const formData = new FormData();
+            const id = $('#EDIT_CLSRM_ID').val();
+            const url = '/api/classroom/' + id + '/update';
+
+            $('#editClassroomForm input, #editClassroomForm select, #editClassroomForm textarea').each(function() {
+                const originalValue = $(this).data('original-value');
+                const currentValue = $(this).val();
+
+                const trimmedOriginalValue = (originalValue !== undefined) ? originalValue.trim() : '';
+                const trimmedCurrentValue = (currentValue !== undefined) ? currentValue.trim() : '';
+
+                console.log('Original:', trimmedOriginalValue, 'Current:', trimmedCurrentValue);
+                if (trimmedOriginalValue !== trimmedCurrentValue) {
+                    hasChanges = true;
+                    formData.append($(this).attr('name'), trimmedCurrentValue);
+                }
+            });
+
+            if (!hasChanges) {
+                toastr.warning("No changes to save.");
+                return;
+            }
+
+            createOrUpdateData(formData, url, 'editClassroomModal');
+        });
+
+
         function createOrUpdateData(formData, url, modalId) {
-            createOverlay("{{ trans('generic.OverlayProcess') }}");
+            createOverlay("Processing..."); // Show overlay while processing
             $.ajax({
                 url: url,
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Talentaku-Token': token
                 },
                 processData: false,
                 contentType: false,
                 data: formData,
-                success: function (data) {
-                    if (data["STATUS"] === "SUCCESS") {
-                        toastr.success(data["MESSAGE"]);
+                success: function(data) {
+                    if (data.STATUS === "SUCCESS") {
+                        toastr.success(data.MESSAGE);
                         gOverlay.hide();
                         $('#' + modalId).modal('hide');
                         $('#dataTable').DataTable().ajax.reload();
                     } else {
-                        toastr.error(data["MESSAGE"]);
+                        toastr.error(data.MESSAGE);
                         gOverlay.hide();
                     }
                 },
-                error: function (error) {
+                error: function(error) {
                     gOverlay.hide();
-                    toastr.error("{{ trans('generic.NetworkOrServerError') }}\r\n" + error);
+                    toastr.error("Network or server error: " + error);
                 }
             });
         }
+
     </script>
 @endsection

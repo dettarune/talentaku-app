@@ -59,4 +59,8 @@ class StudentService
     {
         $this->studentRepositoryInterface->delete($S_ID);
     }
+    public function getDatatables()
+    {
+        return $this->studentRepositoryInterface->getDatatables();
+    }
 }

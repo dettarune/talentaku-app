@@ -55,7 +55,7 @@
 
 <div class="login-container">
     <div class="text-center mb-4">
-        <img src="{{ asset('logo.png') }}" alt="Logo Perusahaan" class="login-logo">
+        <img src="{{URL::asset('storage/uploads/images/logo-talentaku.png')}}" alt="Logo Perusahaan" class="login-logo">
     </div>
     <h2 class="text-center mb-4">Login</h2>
     <form id="loginForm">

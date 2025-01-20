@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Helpers\Helper;
 use App\Models\Users;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -39,22 +40,24 @@ class UserRepository implements UserRepositoryInterface
             'U_EMAIL' => $data['U_EMAIL'],
             'U_ADDRESS' => $data['U_ADDRESS'],
             'U_PHONE' => $data['U_PHONE'],
+            'U_IMAGE_PROFILE' => $data['U_IMAGE_PROFILE'],
             'SYS_CREATE_USER' => $data['SYS_CREATE_USER'] ?? 'System',
             'SYS_CREATE_TIME' => now(),
         ];
 
-        if (!empty($data['U_IMAGE_PROFILE'])) {
-            $file = $data['U_IMAGE_PROFILE'];
-            $fileName = uniqid() .$file.'.' . $file->getClientOriginalExtension();
-            $filePath = $file->storeAs('uploads/images', $fileName, 'public');
-            $insertData['U_IMAGE_PROFILE'] = $filePath;
-        }
         $U_ID = DB::table('_users')->insertGetId($insertData);
+        $hashedPassword = Hash::make($U_ID . $data['U_PASSWORD']);
+
+        // Langkah 3: Update password hash
+        DB::table('_users')->where('U_ID', $U_ID)->update([
+            'U_PASSWORD_HASH' => $hashedPassword,
+        ]);
         return $this->getById($U_ID);
     }
 
     public function update(array $data, $U_ID)
     {
+        log::info('update user repo');
         $user = $this->getById($U_ID);
         if (!$user) {
             return null;
@@ -68,7 +71,7 @@ class UserRepository implements UserRepositoryInterface
             $updateData['U_NAME'] = $data['U_NAME'];
         }
         if (isset($data['U_PASSWORD'])) {
-            $updateData['U_PASSWORD_HASH'] = Hash::make($data['U_PASSWORD']);
+            $updateData['U_PASSWORD_HASH'] = Hash::make($U_ID.$data['U_PASSWORD']);
         }
         if (isset($data['UR_ID'])) {
             $updateData['UR_ID'] = $data['UR_ID'];
@@ -86,8 +89,9 @@ class UserRepository implements UserRepositoryInterface
             $updateData['U_PHONE'] = $data['U_PHONE'];
         }
         if (isset($data['U_IMAGE_PROFILE'])) {
-            $updateData['U_IMAGE_PROFILE'] = $data['U_IMAGE_PROFILE'];
+            $updateData['U_IMAGE_PROFILE'] = $data['U_IMAGE_PROFILE']; // Simpan langsung path yang diterima
         }
+
         DB::table('_users')->where('U_ID', $U_ID)->update($updateData);
         return $this->getById($U_ID);
     }
@@ -112,7 +116,11 @@ class UserRepository implements UserRepositoryInterface
         $columns = array(
             0 => 'U_NAME',
             1 => 'U_SEX',
-            2 => 'ROLE_NAME'
+            2 => 'ROLE_NAME',
+            3 => 'U_EMAIL',
+            4 => 'U_ADDRESS',
+            5 => 'U_PHONE',
+            6 => 'U_LOGIN_TIME',
         );
 
         $limit = $_POST['length'];
@@ -129,7 +137,7 @@ class UserRepository implements UserRepositoryInterface
 
         $baseData = DB::table("_users")
             ->select([
-                "_users.U_ID", "_users.U_NAME","_users.U_SEX","_users.U_LOGIN_TIME",'ur.ROLE_NAME'
+                "_users.U_ID", "_users.U_NAME", "_users.UR_ID","_users.U_SEX","_users.U_LOGIN_TIME","_users.U_EMAIL","_users.U_ADDRESS","_users.U_PHONE","_users.U_IMAGE_PROFILE",'ur.ROLE_NAME'
             ])
             ->join("_user_roles as ur", "ur.UR_ID", "=", "_users.UR_ID");
 
@@ -163,10 +171,20 @@ class UserRepository implements UserRepositoryInterface
         }
 
         foreach ($dtData as $key => $value) {
-            $nestedData["User Name"] = "<span style='opacity: 0.8'>".$value->{"U_NAME"}."</span>";
-            $nestedData["User Sex"] = "<span style='opacity: 0.8'>".$value->{"U_SEX"}."</span>";
-            $nestedData["User Role"] = $value->{"ROLE_NAME"};
-            $nestedData["Last Login"] = $value->{"U_LOGIN_TIME"};
+            $nestedData["User Name"] = !empty($value->{"U_NAME"}) ? "<span style='opacity: 0.8'>".$value->{"U_NAME"}."</span>" : "<span style='opacity: 0.5; color: #000000;'>-</span>";
+            $nestedData["User Email"] = !empty($value->{"U_EMAIL"}) ? $value->{"U_EMAIL"} : "<span style='opacity: 0.5; color: #000000;'>-</span>";
+            $nestedData["User Address"] = !empty($value->{"U_ADDRESS"}) ? $value->{"U_ADDRESS"} : "<span style='opacity: 0.5; color: #000000;'>-</span>";
+            $nestedData["User Phone"] = !empty($value->{"U_PHONE"})
+                ? "<a href='https://wa.me/" . $value->{"U_PHONE"} . "' target='_blank' style='text-decoration: none; color: #25D366;'>"
+                . $value->{"U_PHONE"} .
+                "</a>"
+                : "<span style='opacity: 0.5; color: #000000;'>-</span>";
+            $nestedData["User Sex"] = !empty($value->{"U_SEX"}) ? "<span style='opacity: 0.8'>".$value->{"U_SEX"}."</span>" : "<span style='opacity: 0.5; color: #000000;'>-</span>";
+            $nestedData["User Role"] = !empty($value->{"ROLE_NAME"}) ? $value->{"ROLE_NAME"} : "<span style='opacity: 0.5; color: #000000;'>-</span>";
+            $nestedData["Last Login"] = !empty($value->{"U_LOGIN_TIME"})
+                ? Carbon::parse($value->{"U_LOGIN_TIME"})->format('d M Y')
+                : "<span style='opacity: 0.5; color: #888;'>-</span>";
+
             $action = "";
             $action .= '
         <script type="text/javascript">
@@ -174,7 +192,12 @@ class UserRepository implements UserRepositoryInterface
                 "U_ID" : "'.$value->{"U_ID"}.'",
                 "U_NAME" : "'.$value->{"U_NAME"}.'",
                 "U_SEX" : "'.$value->{"U_SEX"}.'",
+                "U_EMAIL" : "'.$value->{"U_EMAIL"}.'",
+                "U_ADDRESS" : "'.$value->{"U_ADDRESS"}.'",
+                "U_IMAGE_PROFILE" : "'.$value->{"U_IMAGE_PROFILE"}.'",
+                "U_PHONE" : "'.$value->{"U_PHONE"}.'",
                 "ROLE_NAME" : "'.$value->{"ROLE_NAME"}.'",
+                "UR_ID" : "'.$value->{"UR_ID"}.'",
             };
         </script>
     ';
@@ -188,20 +211,7 @@ class UserRepository implements UserRepositoryInterface
                             Edit User
                             </a>
                         </li>
-                        <li>
-                            <a href="javascript:resetPassword(rowData_'.md5($value->{"U_ID"}).')" class="dropdown-item">
-                            Reset Password
-                            </a>
-                        </li>
-                        <li>
-                            <hr class="dropdown-divider">
-                        </li>
-                        <li>
-                            <a href="javascript:void(0);" class="dropdown-item text-danger delete-action" data-id="'. $value->U_ID .'">
-                                Delete User
-                            </a>
 
-                        </li>
                     </ul>
                 </div>';
 

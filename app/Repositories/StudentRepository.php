@@ -25,7 +25,13 @@ class StudentRepository implements StudentRepositoryInterface
     {
         $data = DB::table('t_students')
             ->join('t_classrooms' ,'t_students.CLSRM_ID','=','t_classrooms.CLSRM_ID')
+            ->join('_users','t_students.STUDENT_PARENT_U_ID','=','_users.U_ID')
             ->where('S_ID', $S_ID)
+            ->select(
+                't_students.*',
+                't_classrooms.*',
+                '_users.*',
+            )
             ->first();
         return $data ?: null;
     }
@@ -37,17 +43,12 @@ class StudentRepository implements StudentRepositoryInterface
             'STUDENT_ROLL_NUMBER' => $data['STUDENT_ROLL_NUMBER'],
             'STUDENT_PARENT_U_ID' => $data['STUDENT_PARENT_U_ID'],
             'STUDENT_SEX' => $data['STUDENT_SEX'] ?? 'Not Specified',
+            'STUDENT_IMAGE_PROFILE' => $data['STUDENT_IMAGE_PROFILE'],
             'CLSRM_ID' => $data['CLSRM_ID'] ?? null,
             'SYS_CREATE_USER' => $data['SYS_CREATE_USER'] ?? 'System',
             'SYS_CREATE_AT' => now(),
         ];
         try {
-            if (!empty($data['STUDENT_IMAGE_PROFILE'])) {
-                $file = $data['STUDENT_IMAGE_PROFILE'];
-                $fileName = uniqid() . '.' . $file->getClientOriginalExtension();
-                $filePath = $file->storeAs('uploads/images', $fileName, 'public');
-                $insertData['STUDENT_IMAGE_PROFILE'] = $filePath;
-            }
         $U_ID = DB::table('t_students')->insertGetId($insertData);
         return $this->getById($U_ID);
         }catch (\Exception $exception){
@@ -67,31 +68,8 @@ class StudentRepository implements StudentRepositoryInterface
             $student->STUDENT_PARENT_U_ID = $attributes['STUDENT_PARENT_U_ID'] ?? $student->STUDENT_PARENT_U_ID;
             $student->STUDENT_SEX = $attributes['STUDENT_SEX'] ?? $student->STUDENT_SEX;
             $student->CLSRM_ID = $attributes['CLSRM_ID'] ?? $student->CLSRM_ID;
-            if (!empty($attributes['STUDENT_IMAGE_PROFILE'])) {
-                $base64Data = $attributes['STUDENT_IMAGE_PROFILE'];
-                $mimeType = Helper::getMimeTypeFromBase64($base64Data);
-                $mediaContentValue = Helper::removeBase64Header($base64Data);
-                if (empty($student->STUDENT_IMAGE_PROFILE)) {
-                    $mediaId = Uuid::uuid4()->toString();
-                    DB::table('_medias')->insert([
-                        'MEDIA_ID' => $mediaId,
-                        'MEDIA_MIME_TYPE' => $mimeType,
-                        'MEDIA_CONTENT_TYPE' => 'Base64',
-                        'MEDIA_CONTENT_VALUE' => $mediaContentValue,
-                        'SYS_CREATED_AT' => now(),
-                        'SYS_CREATED_USER' => $attributes['SYS_UPDATE_USER'] ?? 'System',
-                    ]);
-                    $student->STUDENT_IMAGE_PROFILE = $mediaId;
-                } else {
-                    // Update existing media record
-                    DB::table('_medias')->where('MEDIA_ID', $student->STUDENT_IMAGE_PROFILE)->update([
-                        'MEDIA_MIME_TYPE' => $mimeType,
-                        'MEDIA_CONTENT_VALUE' => $mediaContentValue,
-                        'SYS_UPDATE_AT' => now(),
-                        'SYS_UPDATED_USER' => $attributes['SYS_UPDATE_USER'] ?? 'System',
-                    ]);
-                }
-            }
+            $student->STUDENT_IMAGE_PROFILE = $attributes['STUDENT_IMAGE_PROFILE'] ?? $student->STUDENT_IMAGE_PROFILE;
+
             $student->save();
             return $this->getById($S_ID);
         } catch (\Exception $exception) {
@@ -101,7 +79,7 @@ class StudentRepository implements StudentRepositoryInterface
 
     public function delete($S_ID)
     {
-        return t_students::destroy($S_ID);
+        return t_students::where('S_ID','=',$S_ID)->delete();
     }
 
 //    public function getByParentUID($parentUid)
@@ -225,4 +203,109 @@ class StudentRepository implements StudentRepositoryInterface
         });
     }
 
+    public function getDatatables()
+    {
+        {
+            $columns = array(
+                0 => 'STUDENT_NAME',
+                1 => 'STUDENT_ROLL_NUMBER',
+                2 => 'STUDENT_PARENT',
+                3 => 'STUDENT_SEX',
+                4 => 'CLASSROOM_NAME',
+            );
+
+            $limit = $_POST['length'];
+            $start = $_POST['start'];
+            $orderColumnIndex = $_POST['order']['0']['column'] ?? null;
+            if (isset($columns[$orderColumnIndex])) {
+                $order = $columns[$orderColumnIndex];
+            } else {
+                $order = 'STUDENT_NAME';
+            }
+
+            $dir = $_POST['order']['0']['dir'] ?? 'asc';
+//        $dir = $_POST['order']['0']['dir'];
+
+            $baseData = DB::table("t_students")
+                ->select([
+                    "u.*", "cr.*", "t_students.*", "u.U_NAME as STUDENT_PARENT", "cr.CLSRM_NAME as CLASSROOM_NAME"
+                ])
+                ->join("t_classrooms as cr", "cr.CLSRM_ID", "=", "t_students.CLSRM_ID")
+                ->join("_users as u", "u.U_ID", "=", "t_students.STUDENT_PARENT_U_ID");
+
+            $baseCount = $baseData;
+            $totalData = $baseCount->count();
+            $totalFiltered = $totalData;
+            if (empty($_POST['search']['value'])) {
+                $baseData->orderBy($order, $dir);
+                $baseData->limit($limit);
+                $baseData->offset($start);
+                $dtData = $baseData->get();
+            } else {
+                $search = $_POST['search']['value'];
+
+                $baseData->where("t_students.STUDENT_NAME", "like", "%" . $search . "%");
+                $baseData->orWhere("cr.CLSRM_NAME", "like", "%" . $search . "%");
+
+                $filterCount = $baseData;
+
+                $baseData->orderBy($order, $dir);
+                $baseData->limit($limit);
+                $baseData->offset($start);
+                $dtData = $baseData->get();
+
+                $totalFiltered = $filterCount->count();
+                if (!($totalFiltered)) $totalFiltered = 0;
+            }
+
+            foreach ($dtData as $key => $value) {
+                $nestedData["Student Name"] = "<span style='opacity: 0.8'>" . $value->{"STUDENT_NAME"} . "</span>";
+                $nestedData["Roll Number"] = "<span style='opacity: 0.8'>" . $value->{"STUDENT_ROLL_NUMBER"} . "</span>";
+                $nestedData["Parent"] = "<span style='opacity: 0.8'>" . $value->{"STUDENT_PARENT"} . "</span>";
+                $nestedData["Gender"] = "<span style='opacity: 0.8'>" . $value->{"STUDENT_SEX"} . "</span>";
+                $nestedData["Classroom"] = "<span style='opacity: 0.8'>" . $value->{"CLASSROOM_NAME"} . "</span>";
+                $action = "";
+                $action .= '
+        <script type="text/javascript">
+             var rowData_' . md5($value->{"S_ID"}) . ' = {
+                "S_ID" : "' . $value->{"S_ID"} . '",
+                "STUDENT_NAME" : "' . $value->{"STUDENT_NAME"} . '",
+                "STUDENT_ROLL_NUMBER" : "' . $value->{"STUDENT_ROLL_NUMBER"} . '",
+                "STUDENT_PARENT" : "' . $value->{"STUDENT_PARENT"} . '",
+                "STUDENT_SEX" : "' . $value->{"STUDENT_SEX"} . '",
+                "CLASSROOM_NAME" : "' . $value->{"CLASSROOM_NAME"} . '",
+                "CLSRM_ID" : "' . $value->{"CLSRM_ID"} . '",
+                "STUDENT_PARENT_U_ID" : "' . $value->{"STUDENT_PARENT_U_ID"} . '",
+            };
+        </script>
+    ';
+                $action .= '<div class="dropdown">
+                    <button type="button" class="btn btn-primary dropdown-toggle btn-sm" data-bs-toggle="dropdown" aria-expanded="false">
+                                Action
+                    </button>
+                    <ul class="dropdown-menu">
+                      <li>
+                            <a href="javascript:detailStudent(rowData_' . md5($value->{"S_ID"}) . ')" class="dropdown-item">
+                            Detail Student
+                            </a>
+                        </li>
+
+                    </ul>
+                </div>';
+
+
+                $nestedData["Action"] = $action;
+                $data[] = $nestedData;
+            }
+
+            $arrData = array(
+                "draw" => intval($_POST['draw']),
+                "recordsTotal" => intval($totalData),
+                "recordsFiltered" => intval($totalFiltered),
+                "data" => isset($data) ? $data : []
+            );
+
+            return json_encode($arrData);
+        }
+    }
 }

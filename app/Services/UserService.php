@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Repositories\UserRepositoryInterface;
+use Illuminate\Support\Facades\Log;
 
 class UserService
 {
@@ -23,6 +24,7 @@ class UserService
         return $this->userRepositoryInterface->create($data);
     }
     public function update($data, $U_ID){
+        log::info('update user service');
         $user = $this->userRepositoryInterface->getById($U_ID);
         if(!$user){
             throw new \Exception("User not found");

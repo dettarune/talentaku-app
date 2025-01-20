@@ -6,13 +6,15 @@ use App\Helpers\Helper;
 use App\Models\t_ref_report_activities;
 use App\Models\t_student_report_activities;
 use App\Models\t_student_reports;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class StudentReportRepository implements StudentReportRepositoryInterface
 {
 
-    public function customGetStudentReports($date = null, $parent = null, $teacher = null)
+    public function customGetStudentReports($date = null, $parent = null, $teacher = null, $studentId = null)
     {
         $query = t_student_reports::with([
             'student' => function ($query) {
@@ -35,12 +37,18 @@ class StudentReportRepository implements StudentReportRepositoryInterface
         ]);
 
         if ($date) {
-            $month = date('m', strtotime($date));
-            $year = date('Y', strtotime($date));
-            $query->whereMonth('SR_DATE', $month)
-                ->whereYear('SR_DATE', $year);
+            // Check if date is in format Y-m or Y-m-d
+            if (strlen($date) === 7) {
+                // Format Y-m
+                $month = date('m', strtotime($date));
+                $year = date('Y', strtotime($date));
+                $query->whereMonth('SR_DATE', $month)
+                    ->whereYear('SR_DATE', $year);
+            } elseif (strlen($date) === 10) {
+                // Format Y-m-d
+                $query->whereDate('SR_DATE', $date);
+            }
         }
-
         if ($parent) {
             $query->whereHas('student', function ($q) use ($parent) {
                 $q->where('STUDENT_PARENT_U_ID', $parent);
@@ -51,6 +59,9 @@ class StudentReportRepository implements StudentReportRepositoryInterface
             $query->whereHas('teacher', function ($q) use ($teacher) {
                 $q->where('U_ID', $teacher);
             });
+        }
+        if ($studentId) {
+            $query->where('S_ID', $studentId);
         }
 
         $data = $query->orderBy('SR_ID')->get();
@@ -129,7 +140,7 @@ class StudentReportRepository implements StudentReportRepositoryInterface
     {
         $report = t_student_reports::with([
             'student' => function ($query) {
-                $query->select('S_ID', 'STUDENT_NAME', 'STUDENT_PARENT_U_ID');
+                $query->select('S_ID', 'STUDENT_NAME', 'STUDENT_PARENT_U_ID')->withTrashed();
             },
             'student.parent' => function ($query) {
                 $query->select('U_ID', 'U_NAME as STUDENT_PARENT_NAME');
@@ -155,7 +166,7 @@ class StudentReportRepository implements StudentReportRepositoryInterface
             'SR_TITLE' => $report->SR_TITLE,
             'SR_CONTENT' => $report->SR_CONTENT,
             'SR_DATE' => $report->SR_DATE,
-            'FORMATTED_DATE' => $report->SR_DATE ? \Carbon\Carbon::parse($report->SR_DATE)->format('d-m-Y') : null,
+            'FORMATTED_DATE' => $report->SR_DATE ? \Carbon\Carbon::parse($report->SR_DATE)->format('d-F-Y') : null,
             'STUDENT' => [
                 'S_ID' => $report->student->S_ID,
                 'STUDENT_NAME' => $report->student->STUDENT_NAME,
@@ -391,5 +402,148 @@ class StudentReportRepository implements StudentReportRepositoryInterface
     public function deleteRefReportActivity()
     {
         // TODO: Implement deleteRefReportActivity() method.
+    }
+
+    public function getDatatables($S_ID, $date = null)
+    {
+        {
+            $columns = array(
+                0 => 'SR_TITLE',
+                1 => 'STUDENT_NAME',
+                2 => 'FORMATTED_DATE',
+                3 => 'TEACHER_NAME',
+            );
+
+            $limit = $_POST['length'];
+            $start = $_POST['start'];
+            $orderColumnIndex = $_POST['order']['0']['column'] ?? null;
+            if (isset($columns[$orderColumnIndex])) {
+                $order = $columns[$orderColumnIndex];
+            } else {
+                $order = 'SR_TITLE';
+            }
+
+            $dir = $_POST['order']['0']['dir'] ?? 'asc';
+//        $dir = $_POST['order']['0']['dir'];
+
+            $baseData = t_student_reports::with([
+                'student' => function ($query) {
+                    $query->select('S_ID', 'STUDENT_NAME', 'STUDENT_PARENT_U_ID')->withTrashed();
+                },
+                'student.parent' => function ($query) {
+                    $query->select('U_ID', 'U_NAME as STUDENT_PARENT_NAME');
+                },
+                'teacher' => function ($query) {
+                    $query->select('U_ID', 'U_NAME as TEACHER_NAME');
+                },
+                'activities' => function ($query) {
+                    $query->select('SRA_ID', 'SR_ID', 'ACTIVITY_NAME')
+                        ->orderBy('SRA_ID');
+                },
+                'activities.refActivities' => function ($query) {
+                    $query->select('RRA_ID', 'SRA_ID', 'ACTIVITY_TYPE', 'ACTIVITY_NAME', 'STATUS')
+                        ->orderBy('RRA_ID');
+                },
+            ]);
+            if ($date) {
+                // Check if date is in format Y-m or Y-m-d
+                if (strlen($date) === 7) {
+                    // Format Y-m
+                    $month = date('m', strtotime($date));
+                    $year = date('Y', strtotime($date));
+                    $baseData->whereMonth('SR_DATE', $month)
+                        ->whereYear('SR_DATE', $year);
+                } elseif (strlen($date) === 10) {
+                    // Format Y-m-d
+                    $baseData->whereDate('SR_DATE', $date);
+                }
+            }
+            $baseData->where('S_ID', '=',$S_ID);
+            $baseCount = $baseData;
+            $totalData = $baseCount->count();
+            $totalFiltered = $totalData;
+            if (empty($_POST['search']['value'])) {
+                $baseData->where('S_ID', '=',$S_ID);
+                $baseData->orderBy($order, $dir);
+                $baseData->limit($limit);
+                $baseData->offset($start);
+                $dtData = $baseData->get();
+                log::info('duar duar duar '. json_encode($dtData));
+            } else {
+                $search = $_POST['search']['value'];
+                $baseData->where('S_ID', '=',$S_ID);
+
+                $baseData->where(function ($query) use ($search) {
+                    $query->where("t_student_reports.SR_TITLE", "like", "%" . $search . "%")
+                        ->orWhere("t_student_reports.SR_CONTENT", "like", "%" . $search . "%");
+                });
+                $filterCount = $baseData;
+
+                $baseData->orderBy($order, $dir);
+                $baseData->limit($limit);
+                $baseData->offset($start);
+                $dtData = $baseData->get();
+                log::info('duar duar duar '. json_encode($dtData));
+
+                $totalFiltered = $filterCount->count();
+                if (!($totalFiltered)) $totalFiltered = 0;
+            }
+
+            foreach ($dtData as $key => $value) {
+                $nestedData["SR_TITLE"] = "<span style='opacity: 0.8'>" . $value->SR_TITLE . "</span>";
+                $nestedData["SR_CONTENT"] = "<span style='opacity: 0.8'>" . Str::limit($value->SR_CONTENT, 100) . "</span>";
+                $nestedData["STUDENT_NAME"] = "<span style='opacity: 0.8'>" . $value->student->STUDENT_NAME . "</span>";
+                $nestedData["STUDENT_PARENT_NAME"] = "<span style='opacity: 0.8'>" . $value->student->parent->STUDENT_PARENT_NAME . "</span>";
+                $nestedData["TEACHER_NAME"] = "<span style='opacity: 0.8'>" . $value->teacher->TEACHER_NAME . "</span>";
+                $nestedData["FORMATTED_DATE"] = "<span style='opacity: 0.8'>" . \Carbon\Carbon::parse($value->SR_DATE)->format('d F Y') . "</span>";
+
+                $action = "";
+                $action .= '
+        <script type="text/javascript">
+             var rowData_' . md5($value->{"SR_ID"}) . ' = {
+                "SR_ID" : "' . $value->{"SR_ID"} . '",
+                "SR_TITLE" : "' . $value->{"SR_TITLE"} . '",
+                "SR_CONTENT" : "' . $value->{"STUDENT_ROLL_NUMBER"} . '",
+                "STUDENT_PARENT" : "' . $value->{"STUDENT_PARENT"} . '",
+                "STUDENT_SEX" : "' . $value->{"STUDENT_SEX"} . '",
+                "CLASSROOM_NAME" : "' . $value->{"CLASSROOM_NAME"} . '",
+                "CLSRM_ID" : "' . $value->{"CLSRM_ID"} . '",
+                "STUDENT_PARENT_U_ID" : "' . $value->{"STUDENT_PARENT_U_ID"} . '",
+            };
+        </script>
+    ';
+                $action .= '<div class="dropdown">
+                    <button type="button" class="btn btn-primary dropdown-toggle btn-sm" data-bs-toggle="dropdown" aria-expanded="false">
+                                Action
+                    </button>
+                    <ul class="dropdown-menu">
+                      <li>
+                            <a href="javascript:detailStudentReport(rowData_' . md5($value->{"SR_ID"}) . ')" class="dropdown-item">
+                            Detail Student Report
+                            </a>
+                        </li>
+                        <li>
+            <a href="javascript:void(0);" onclick="deleteReport(' . $value->{"SR_ID"} . ')" class="dropdown-item">
+                Delete
+            </a>
+        </li>
+
+                    </ul>
+                </div>';
+
+
+                $nestedData["Action"] = $action;
+                $data[] = $nestedData;
+            }
+
+            $arrData = array(
+                "draw" => intval($_POST['draw']),
+                "recordsTotal" => intval($totalData),
+                "recordsFiltered" => intval($totalFiltered),
+                "data" => isset($data) ? $data : []
+            );
+
+            return json_encode($arrData);
+        }
     }
 }

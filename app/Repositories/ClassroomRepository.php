@@ -97,7 +97,8 @@ class ClassroomRepository implements ClassroomRepositoryInterface
 
         $baseData = t_classrooms::query()
             ->select([
-                't_classrooms.*',
+                't_classrooms.CLSRM_ID',
+                't_classrooms.CLSRM_NAME as CLASSROOM_NAME',
                 't_classrooms.CLSRM_TYPE',
                 't_classrooms.CLSRM_GRADE',
                 't_classrooms.CLSRM_DESCRIPTION',
@@ -113,10 +114,7 @@ class ClassroomRepository implements ClassroomRepositoryInterface
             $baseData->limit($limit);
             $baseData->offset($start);
 
-            $dtData = $baseData->get()->transform(function ($classroom) {
-                $classroom->CLASSROOM_NAME = $this->generateFinalClassroomName($classroom);
-                return $classroom;
-            });
+            $dtData = $baseData->get();
         } else {
             $search = $_POST['search']['value'];
             $baseData->where("CLSRM_NAME", "like", "%".$search."%")
@@ -129,15 +127,7 @@ class ClassroomRepository implements ClassroomRepositoryInterface
             $baseData->limit($limit);
             $baseData->offset($start);
 
-            $dtData = $baseData->get()->transform(function ($classroom) {
-                $classroom->CLASSROOM_NAME = $this->generateFinalClassroomName($classroom);
-                return $classroom;
-            });
-
-            $search = strtolower($search);
-            $dtData = $dtData->filter(function ($classroom) use ($search) {
-                return strpos(strtolower($classroom->CLASSROOM_NAME), $search) !== false;
-            });
+            $dtData = $baseData->get();
         }
 
         foreach ($dtData as $value) {
@@ -152,7 +142,6 @@ class ClassroomRepository implements ClassroomRepositoryInterface
             <script type="text/javascript">
                 var rowData_'.md5($value->{"CLSRM_ID"}).' = {
                     "CLSRM_ID" : "'.$value->{"CLSRM_ID"}.'",
-                    "CLSRM_NAME" : "'.$value->{"CLSRM_NAME"}.'",
                     "CLASSROOM_NAME" : "'.$value->{"CLASSROOM_NAME"}.'",
                     "CLSRM_TYPE" : "'.$value->{"CLSRM_TYPE"}.'",
                     "CLSRM_GRADE" : "'.$value->{"CLSRM_GRADE"}.'",
@@ -170,14 +159,7 @@ class ClassroomRepository implements ClassroomRepositoryInterface
                         Edit
                         </a>
                     </li>
-                    <li>
-                        <hr class="dropdown-divider">
-                    </li>
-                    <li>
-                        <a href="javascript:void(0);" class="dropdown-item text-danger delete-action" data-id="'. $value->CLSRM_ID .'">
-                            Delete User
-                        </a>
-                    </li>
+
                 </ul>
             </div>';
 
