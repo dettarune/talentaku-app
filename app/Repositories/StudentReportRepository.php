@@ -409,8 +409,8 @@ class StudentReportRepository implements StudentReportRepositoryInterface
         {
             $columns = array(
                 0 => 'SR_TITLE',
-                1 => 'STUDENT_NAME',
-                2 => 'FORMATTED_DATE',
+                1 => 'SR_CONTENT',
+                2 => 'SR_DATE',
                 3 => 'TEACHER_NAME',
             );
 
@@ -445,6 +445,8 @@ class StudentReportRepository implements StudentReportRepositoryInterface
                         ->orderBy('RRA_ID');
                 },
             ]);
+            $baseData->join('_users as teachers', 't_student_reports.U_ID', '=', 'teachers.U_ID')
+                ->select('t_student_reports.*', 'teachers.U_NAME as TEACHER_NAME');
             if ($date) {
                 // Check if date is in format Y-m or Y-m-d
                 if (strlen($date) === 7) {
@@ -468,14 +470,14 @@ class StudentReportRepository implements StudentReportRepositoryInterface
                 $baseData->limit($limit);
                 $baseData->offset($start);
                 $dtData = $baseData->get();
-                log::info('duar duar duar '. json_encode($dtData));
             } else {
                 $search = $_POST['search']['value'];
                 $baseData->where('S_ID', '=',$S_ID);
 
                 $baseData->where(function ($query) use ($search) {
                     $query->where("t_student_reports.SR_TITLE", "like", "%" . $search . "%")
-                        ->orWhere("t_student_reports.SR_CONTENT", "like", "%" . $search . "%");
+                        ->orWhere("t_student_reports.SR_CONTENT", "like", "%" . $search . "%")
+                        ->orWhere("t_student_reports.SR_DATE", "like", "%" . $search . "%");
                 });
                 $filterCount = $baseData;
 
@@ -483,7 +485,6 @@ class StudentReportRepository implements StudentReportRepositoryInterface
                 $baseData->limit($limit);
                 $baseData->offset($start);
                 $dtData = $baseData->get();
-                log::info('duar duar duar '. json_encode($dtData));
 
                 $totalFiltered = $filterCount->count();
                 if (!($totalFiltered)) $totalFiltered = 0;
@@ -492,8 +493,6 @@ class StudentReportRepository implements StudentReportRepositoryInterface
             foreach ($dtData as $key => $value) {
                 $nestedData["SR_TITLE"] = "<span style='opacity: 0.8'>" . $value->SR_TITLE . "</span>";
                 $nestedData["SR_CONTENT"] = "<span style='opacity: 0.8'>" . Str::limit($value->SR_CONTENT, 100) . "</span>";
-                $nestedData["STUDENT_NAME"] = "<span style='opacity: 0.8'>" . $value->student->STUDENT_NAME . "</span>";
-                $nestedData["STUDENT_PARENT_NAME"] = "<span style='opacity: 0.8'>" . $value->student->parent->STUDENT_PARENT_NAME . "</span>";
                 $nestedData["TEACHER_NAME"] = "<span style='opacity: 0.8'>" . $value->teacher->TEACHER_NAME . "</span>";
                 $nestedData["FORMATTED_DATE"] = "<span style='opacity: 0.8'>" . \Carbon\Carbon::parse($value->SR_DATE)->format('d F Y') . "</span>";
 

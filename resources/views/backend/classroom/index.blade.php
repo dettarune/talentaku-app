@@ -244,7 +244,6 @@
                 const trimmedOriginalValue = (originalValue !== undefined) ? originalValue.trim() : '';
                 const trimmedCurrentValue = (currentValue !== undefined) ? currentValue.trim() : '';
 
-                console.log('Original:', trimmedOriginalValue, 'Current:', trimmedCurrentValue);
                 if (trimmedOriginalValue !== trimmedCurrentValue) {
                     hasChanges = true;
                     formData.append($(this).attr('name'), trimmedCurrentValue);

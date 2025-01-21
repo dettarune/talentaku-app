@@ -6,7 +6,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>TALENTAKU</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" integrity="sha384-..." crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
 
     <!-- Toastr CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastr@2.1.4/build/toastr.min.css">
@@ -21,7 +21,7 @@
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
 
     <!-- Bootstrap Bundle JS (includes Popper) -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-..." crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 
     <!-- Toastr JS -->
     <script src="https://cdn.jsdelivr.net/npm/toastr@2.1.4/toastr.min.js"></script>
@@ -284,18 +284,7 @@
         const currentPath = window.location.pathname;
         $(`.sidebar-nav .nav-link[href="${currentPath}"]`).addClass('active');
     });
-    function createOverlay(message) {
-        $('body').append(`
-        <div id="overlay" class="fixed inset-0 bg-black opacity-50 z-50 flex items-center justify-center">
-            <div class="text-white bg-gray-800 p-4 rounded">
-                <div class="spinner-border text-light" role="status">
-                    <span class="visually-hidden">Loading...</span>
-                </div>
-                <div class="mt-2">${message}</div>
-            </div>
-        </div>
-    `);
-    }
+
 
     var gOverlay = {
         hide: function() {
@@ -328,9 +317,23 @@
             width: '100%' // Pastikan dropdown menyesuaikan lebar container
         });
     });
-    // $(document).ready(function() {
-    //     $('.select2').select2();
-    // });
+    function createOverlay(message) {
+        $('#overlay').remove();
+
+        // Tambahkan overlay baru
+        $('body').append(`
+        <div id="overlay" class="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 d-flex justify-content-center align-items-center" style="z-index: 1100;">
+            <div class="text-center">
+                <!-- Bootstrap Spinner -->
+                <div class="spinner-border text-light mb-3" role="status" style="width: 3rem; height: 3rem;">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <!-- Pesan -->
+                <p class="text-white">${message}</p>
+            </div>
+        </div>
+    `);
+    }
 </script>
 
 </body>

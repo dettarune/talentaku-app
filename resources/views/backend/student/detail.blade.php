@@ -147,7 +147,7 @@
 
                              alt="{{ $student->STUDENT_NAME }}"
                              class="profile-image"
-                             onerror="this.src='https://via.placeholder.com/200x200?text=No+Image'">
+                             onerror="this.src='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTVLDP5s2j9u1x86fOb7kNKXanJeMn8zZ30ZQ&s'">
                     </div>
                     <h1 class="display-4 fw-bold mb-2">{{ $student->STUDENT_NAME }}</h1>
                     <p class="lead mb-0" id="studentId">Student ID: {{ $student->S_ID }}</p>
@@ -463,17 +463,11 @@
             });
         });
 
-        $(function () {
-            $('#date').datetimepicker({
-                viewMode: 'years'
-            });
-        });
 
         function editStudentData(rowData) {
             // Pastikan rowData sudah berupa objek JavaScript
             if (typeof rowData === 'string') {
                 rowData = JSON.parse(rowData); // Jika dalam bentuk string, parse ke objek
-                console.log(rowData)
             }
 
             $('#modalTitle').text('Edit Student');
@@ -510,7 +504,7 @@
             $('#editStudentForm input, #editStudentForm select').each(function () {
                 const originalValue = $(this).data('original-value');
                 const currentValue = $(this).val();
-                console.log('lala ' + originalValue + 'lala ' + currentValue)
+                ('lala ' + originalValue + 'lala ' + currentValue)
 
                 // Handle select inputs that need to be converted to integer
                 if ($(this).attr('name') === 'STUDENT_PARENT_U_ID' || $(this).attr('name') === 'CLSRM_ID') {
@@ -540,7 +534,7 @@
 
             // Log FormData content for debugging
             for (let [key, value] of formData.entries()) {
-                console.log(`${key}: ${value}`);
+                (`${key}: ${value}`);
             }
 
             // Make the request to update data
@@ -780,7 +774,7 @@
                             'X-CSRF-TOKEN': '{{ csrf_token() }}',
                         },
                         success: function(response) {
-                            console.log('status '+response.STATUS)
+                            ('status '+response.STATUS)
                             if (response.STATUS === 'SUCCESS') {
                                 $('#detailReportModal').modal('hide');
                                 gOverlay.hide();
@@ -802,7 +796,7 @@
         }
 
         function confirmDelete(studentId) {
-            console.log(studentId)
+            (studentId)
             Swal.fire({
                 title: 'Are you sure?',
                 text: "You will disable this student!",
