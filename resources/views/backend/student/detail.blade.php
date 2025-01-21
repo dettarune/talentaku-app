@@ -136,6 +136,16 @@
         .text-title{
             color: #214162;
         }
+        #imagePreview {
+            display: none;
+            max-width: 100%;
+            max-height: 300px;
+            object-fit: contain;
+            margin-top: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
     </style>
     <div class="container-fluid py-4">
         <div class="row justify-content-center">
@@ -806,8 +816,8 @@
                 cancelButtonColor: '#3085d6',
                 confirmButtonText: 'Yes, delete it!'
             }).then((result) => {
-                createOverlay('Loading...');
                 if (result.isConfirmed) {
+                createOverlay('Loading...');
                     $.ajax({
                         url: `/backend/student/${studentId}/delete`,
                         method: 'POST',
@@ -817,7 +827,7 @@
                         success: function(response) {
                             gOverlay.hide();
                             if (response.STATUS === 'SUCCESS') {
-                                // location.reload();
+                                location.reload();
                                 toastr.success('Student disable successfully');
                                 // Refresh your data table or list here
                             } else {
@@ -843,8 +853,8 @@
                 cancelButtonColor: '#d33',
                 confirmButtonText: 'Yes, restore it!'
             }).then((result) => {
-                createOverlay('Loading...');
                 if (result.isConfirmed) {
+                createOverlay('Loading...');
                     $.ajax({
                         url: `/backend/student/${studentId}/restore`,
                         method: 'POST',
